@@ -1,0 +1,41 @@
+.card-dashboard {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.container {
+    max-width: 1100px;
+}
+
+/* Colores por situación */
+
+.situacion-1 {
+    color: #28a745; // verde
+    font-weight: bold;
+}
+
+.situacion-2 {
+    color: #ffc107; // amarillo
+    font-weight: bold;
+}
+
+.situacion-3 {
+    color: #fd7e14; // naranja
+    font-weight: bold;
+}
+
+.situacion-4 {
+    color: #dc3545; // rojo
+    font-weight: bold;
+}
+
+.situacion-5 {
+    color: #8b0000; // rojo oscuro
+    font-weight: bold;
+}

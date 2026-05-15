@@ -1,0 +1,17 @@
+.app-header {
+    background-color: #002b5c; // azul bancario
+    color: white;
+    height: 60px;
+    display: flex;
+    align-items: center;
+
+    .app-title {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .app-user {
+        font-size: 14px;
+        opacity: 0.8;
+    }
+}

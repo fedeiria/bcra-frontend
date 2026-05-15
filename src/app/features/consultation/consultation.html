@@ -1,0 +1,104 @@
+<app-header></app-header>
+
+<div class="container mt-5">
+
+  <h3 class="mb-4">Consulta Crediticia</h3>
+
+  <!-- FORM -->
+  <div class="row align-items-center">
+    <div class="col-md-6">
+      <input
+            type="text" class="form-control" [(ngModel)]="cuit"
+            (input)="onCuitInput($event)"
+            maxlength="11"
+            inputmode="numeric"
+            placeholder="Ingresar CUIT"
+            [class.is-invalid]="cuit && !isValidCuit()"
+        />
+        @if (cuit && !isValidCuit()) {
+            <small class="text-danger">
+                El CUIT debe tener 11 dígitos numéricos
+            </small>
+        }
+    </div>
+
+    <div class="col-md-2">
+      <button
+        class="btn btn-primary w-100"
+        (click)="consult()"
+        [disabled]="loading || !isValidCuit()"
+      >
+        {{ loading ? 'Consultando...' : 'Consultar' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- SPINNER -->
+  @if (loading) {
+    <app-spinner class="mt-4" message="Consultando información..."></app-spinner>
+  }
+
+  <!-- ERROR -->
+  @if (!loading && errorMessage) {
+    <div class="alert alert-danger mt-4">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <!-- RESULTADO OK -->
+  @if (!loading && result) {
+        <div class="alert alert-info mt-4">
+            Resultado de la consulta para CUIT: {{ cuit }}
+        </div>
+
+        <div class="row g-3">
+
+            <!-- Cliente -->
+            <div class="col-md-3">
+                <div class="card card-dashboard shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Cliente</h6>
+                    <h5 class="fw-bold">{{ result.denominacion }}</h5>
+                    <small>CUIT: {{ result.cuit }}</small>
+                </div>
+                </div>
+            </div>
+
+            <!-- Deuda -->
+            <div class="col-md-3">
+                <div class="card card-dashboard shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Deuda Total</h6>
+                    <h4 class="fw-bold">
+                        {{ result.deudaTotal | currency:'ARS':'symbol':'1.0-0' }}
+                    </h4>
+                </div>
+                </div>
+            </div>
+
+            <!-- Situación -->
+            <div class="col-md-3">
+                <div class="card card-dashboard shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Situación</h6>
+                    <h4 [ngClass]="getSituationClass(result.situacion)">
+                        {{ result.situacion }}
+                    </h4>
+                </div>
+                </div>
+            </div>
+
+            <!-- Entidades -->
+            <div class="col-md-3">
+                <div class="card card-dashboard shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Entidades</h6>
+                    <h4 class="fw-bold">{{ result.cantidadEntidades }}</h4>
+                </div>
+                </div>
+            </div>
+
+        </div>
+    }
+
+</div>
