@@ -1,0 +1,82 @@
+.chart-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+}
+
+.table-scroll {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+:host ::ng-deep {
+    .situacion-0 {
+        background-color: #e9ecef !important;
+        color: #495057 !important;
+    }
+
+    .situacion-1 {
+        background-color: #d4edda !important;
+        color: #155724 !important;
+    }
+
+    .situacion-2 {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+    }
+
+    .situacion-3 {
+        background-color: #ffe8d6 !important;
+        color: #fe7e14 !important;
+    }
+
+    .situacion-4 {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+    }
+
+    .situacion-5 {
+        background-color: #f5c6cb !important;
+        color: #721c24 !important;
+        font-weight: bold;
+    }
+}
+
+.export-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .export-label {
+        font-size: 0.85rem;
+        color: #8a99a8;
+        font-weight: 600;
+    }
+}
+
+.btn-outline-custom {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.excel-outline:hover {
+        color: #ffffff;
+        background-color: #107c41;
+        border-color: #107c41;
+    }
+
+    &.pdf-outline:hover {
+        color: #ffffff;
+        background-color: #e01b22;
+        border-color: #e01b22;
+    }
+}

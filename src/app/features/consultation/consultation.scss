@@ -1,41 +1,108 @@
+// Institutional color palette
+$primary-bank: #0a3a60;
+$bg-light: #f4f6f9;
+$white: #ffffff;
+
+.main-container {
+    background-color: $bg-light;
+    min-height: calc(100vh - 76px);
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+// Search Card
+.search-card {
+    border: none;
+    border-radius: 16px;
+    background: $white;
+    
+    .search-title {
+        color: $primary-bank;
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+
+    .form-control-custom {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+
+        &:focus {
+            border-color: $primary-bank;
+            box-shadow: 0 0 0 0.25rem rgba(10, 58, 96, 0.15);
+        }
+    }
+
+    .btn-search {
+        background-color: $primary-bank;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 0.6rem 1.5rem;
+        transition: background-color 0.2s ease;
+
+        &:hover:not(:disabled) {
+            background-color: #06243d;
+        }
+    }
+}
+
+// Card Dashboard (Metric Cards)
 .card-dashboard {
     border: none;
-    border-radius: 10px;
+    border-radius: 14px;
+    background: $white;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
         transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 1.25rem;
+    }
+
+    .metric-title {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 600;
+        color: #8a99a8;
     }
 }
 
-.container {
-    max-width: 1100px;
+// Badge o Badge-pill to show credit situation with colors
+.situation-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
 }
 
-/* Colores por situación */
+/* Classes for each credit situation */
+.situacion-0 { background-color: #f1f3f5; color: #6c757d; }
+.situacion-1 { background-color: #e2f6e9; color: #28a745; }
+.situacion-2 { background-color: #fff9db; color: #f59f00; }
+.situacion-3 { background-color: #fff4e6; color: #f76707; }
+.situacion-4 { background-color: #fff5f5; color: #fa5252; }
+.situacion-5 { background-color: #ffe3e3; color: #c92a2a; }
 
-.situacion-1 {
-    color: #28a745; // verde
-    font-weight: bold;
-}
-
-.situacion-2 {
-    color: #ffc107; // amarillo
-    font-weight: bold;
-}
-
-.situacion-3 {
-    color: #fd7e14; // naranja
-    font-weight: bold;
-}
-
-.situacion-4 {
-    color: #dc3545; // rojo
-    font-weight: bold;
-}
-
-.situacion-5 {
-    color: #8b0000; // rojo oscuro
-    font-weight: bold;
+// Empty State
+.empty-state-box {
+    background: $white;
+    border-radius: 16px;
+    padding: 3.5rem 2rem;
+    border: 2px dashed #e2e8f0;
 }

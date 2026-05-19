@@ -1,17 +1,81 @@
-.app-header {
-    background-color: #002b5c; // azul bancario
-    color: white;
-    height: 60px;
-    display: flex;
-    align-items: center;
+// Institutional color palette
+$primary-bank: #0a3a60;
+$primary-dark: #06243d;
 
-    .app-title {
-        font-size: 18px;
-        font-weight: 600;
+.app-header {
+    height: 76px;
+    background: linear-gradient(135deg, $primary-bank 0%, $primary-dark 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-bottom: 3px solid #f59f00;
+
+    .header-icon-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
-    .app-user {
-        font-size: 14px;
-        opacity: 0.8;
+    .app-title {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        line-height: 1.2;
+    }
+
+    .app-subtitle {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+    }
+
+    .user-avatar-placeholder {
+        cursor: pointer;
+        transition: opacity 0.2s;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
+    // Small vertical divider between user info and logout button
+    .header-divider {
+        width: 1px;
+        height: 24px;
+        background-color: rgba(255, 255, 255, 0.15);
+        margin: 0 8px; // Un poquito más de separación horizontal
+    }
+
+    // Logout button with a subtle hover effect
+    .btn-logout-nav {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: rgba(255, 255, 255, 0.85);
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+
+        i {
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            border-color: #64b5f6;
+            color: #64b5f6;
+
+            i {
+                transform: translateX(3px);
+            }
+        }
+
+        &:active {
+            transform: scale(0.96);
+        }
     }
 }

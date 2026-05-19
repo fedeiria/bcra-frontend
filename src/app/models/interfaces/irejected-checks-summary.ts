@@ -1,5 +1,5 @@
 export interface IRejectedChecksSummary {
-    cuit: number;
+    cuit: string;
     denominacion: string;
     cantidad: number;
     montoTotal: number;

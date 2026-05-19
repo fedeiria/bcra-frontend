@@ -1,14 +1,23 @@
 import { Routes } from '@angular/router';
-import { Consultation } from './features/consultation/consultation';
+import { authGuard } from './core/services/auth/auth-guard-guard';
 
 export const routes: Routes = [
-    {
-        path: '',
-        redirectTo: '/consultation',
-        pathMatch: 'full'
-    },
-    {
-        path: 'consultation',
-        component: Consultation
-    }
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login/login').then(c => c.Login),
+  },
+  {
+    path: 'consultation',
+    loadComponent: () => import('./features/consultation/consultation').then(c => c.Consultation),
+    canActivate: [authGuard]
+  },
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: 'login'
+  }
 ];
