@@ -9,7 +9,6 @@ export interface ICreditSummary {
     deudaTotal: number;
     cantidadEntidades: number;
     entidadesDetalle: IDebtEntityDetail[];
-
     cheques: {
         cantidad: number;
         montoTotal: number;

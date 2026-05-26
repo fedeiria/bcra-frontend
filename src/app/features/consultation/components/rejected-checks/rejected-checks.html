@@ -1,0 +1,56 @@
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden animate-fade-in">
+    <div class="card-header bg-white border-0 py-4 px-4 d-flex align-items-center">
+        <h5 class="fw-bold text-dark m-0">
+            <i class="bi bi-slash-circle me-2 text-danger"></i>Registro de Cheques Rechazados
+        </h5>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">Nro Cheque</th>
+                        <th class="text-center">Fecha Rechazo</th>
+                        <th class="text-center">Monto</th>
+                        <th class="text-center">Regularización</th>
+                        <th class="text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (cheque of checks; track cheque.nroCheque) {
+                        <tr>
+                            <td class="text-center fw-bold font-monospace">{{ cheque.nroCheque }}</td>
+                            <td class="text-center">{{ cheque.fechaRechazo | date:'dd/MM/yyyy' }}</td>
+                            <td class="text-center fw-bold text-danger">
+                                ${{ cheque.monto.toLocaleString('es-AR') }}
+                            </td>
+                            <td class="text-center">
+                                @if (cheque.fechaPago) {
+                                    <span class="text-success small fw-bold">Pagado: {{ cheque.fechaPago | date:'dd/MM/yyyy' }}</span>
+                                }
+                                @else if (cheque.fechaPagoMulta) {
+                                    <span class="text-success small fw-bold">Multa: {{ cheque.fechaPagoMulta | date:'dd/MM/yyyy' }}</span>
+                                }
+                                @else {
+                                    <span class="text-muted small">Pendiente</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @let status = getCheckStatusConfig(cheque);
+                                <span class="badge px-3 py-2 border" [ngClass]="status.class">
+                                    {{ status.label }}
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                    @empty {
+                        <tr>
+                            <td colspan="5" class="text-center p-4 text-muted">No hay cheques registrados.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -9,31 +9,24 @@
                     <i class="bi bi-shield-check me-2"></i>Consulta de Situación Crediticia
                 </h3>
                 <p class="text-muted small mb-4">
-                    Ingrese el CUIT del cliente para verificar su estado financiero reportado por el BCRA.
+                    Ingrese el CUIT del cliente (o hasta cinco CUITs separados por espacio) para verificar su estado financiero.
                 </p>
 
                 <div class="row align-items-start g-3">
                     <div class="col-md-8 col-lg-6">
-                        <input type="text" class="form-control form-control-custom" 
-                               [(ngModel)]="cuit"
-                               (input)="onCuitInput($event)" 
-                               maxlength="11" 
-                               inputmode="numeric"
-                               placeholder="Ej: 20123456789" 
-                               [class.is-invalid]="cuit && !isValidCuit()"
-                        />
-
+                        <input type="text" class="form-control form-control-custom" [(ngModel)]="cuit"
+                            (input)="onCuitInput($event)" inputmode="numeric" placeholder="Ej: 20123456789"
+                            [class.is-invalid]="cuit && !isValidCuit()" />
                         @if (cuit && !isValidCuit()) {
                             <div class="invalid-feedback d-block mt-2 font-monospace small" role="alert">
-                                ⚠️ El CUIT debe contener exactamente 11 dígitos numéricos.
+                                ⚠️ El CUIT debe contener exactamente 11 dígitos numéricos por cada entrada.
                             </div>
                         }
                     </div>
 
                     <div class="col-md-4 col-lg-3">
                         <button class="btn btn-primary btn-search w-100 d-flex align-items-center justify-content-center gap-2"
-                                (click)="consult()" 
-                                [disabled]="loading || !isValidCuit()">
+                            (click)="consult()" [disabled]="loading || !isValidCuit()">
                             @if (loading) {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Consultando...</span>
@@ -49,245 +42,147 @@
         </div>
 
         @if (errorMessage) {
-            <div class="alert d-flex align-items-center gap-3 p-3 mb-4 border-start border-4 shadow-sm" 
-                 role="alert" 
-                 aria-live="assertive"
-                 [ngClass]="{
-                    'alert-warning border-warning bg-warning-subtle text-warning-emphasis': errorType === 'warning',
-                    'alert-danger border-danger bg-danger-subtle text-danger-emphasis': errorType === 'danger'
-                 }">
-
-                <div>
-                    @if (errorType === 'warning') {
-                        <i class="bi bi-exclamation-circle-fill fs-3"></i>
-                    }
-                    @else {
-                        <i class="bi bi-cloud-slash-fill fs-3"></i>
-                    }
-                </div>
-
+            <div class="alert d-flex align-items-center gap-3 p-3 mb-4 border-start border-4 shadow-sm"
+                [ngClass]="{'alert-warning border-warning bg-warning-subtle text-warning-emphasis': errorType === 'warning', 'alert-danger border-danger bg-danger-subtle text-danger-emphasis': errorType === 'danger'}">
+                <i class="bi" [ngClass]="errorType === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-cloud-slash-fill'"></i>
                 <div class="d-flex flex-column">
-                    <strong class="fs-6">
-                        {{ errorType === 'warning' ? 'Aviso de Consulta' : 'Falla del Servidor' }}
-                    </strong>
+                    <strong class="fs-6">{{ errorType === 'warning' ? 'Aviso de Consulta' : 'Falla del Servidor' }}</strong>
                     <span class="small">{{ errorMessage }}</span>
                 </div>
             </div>
         }
 
         @if (loading) {
-            <div class="d-flex justify-content-center my-5" aria-live="polite">
+            <div class="d-flex justify-content-center my-5">
                 <app-spinner message="Conectando de forma segura con Central de Deudores BCRA..."></app-spinner>
             </div>
         }
 
-        @if (!loading && !result && !errorMessage) {
+        @if (!loading && !result && resultsArray.length === 0 && !errorMessage) {
             <div class="empty-state-box text-center shadow-sm mt-4">
-                <div class="mb-3 text-muted">
-                    <i class="bi bi-person-badge fs-1 text-secondary opacity-50"></i>
-                </div>
+                <i class="bi bi-person-badge fs-1 text-secondary opacity-50 d-block mb-3"></i>
                 <h5 class="fw-bold text-secondary">Esperando consulta de CUIT</h5>
-                <p class="text-muted mx-auto mb-0 small" style="max-width: 400px;">
-                    Introduzca una clave válida de 11 dígitos arriba para buscar la información consolidada en la central de deudores.
-                </p>
+                <p class="text-muted mx-auto small" style="max-width: 400px;">Introduzca uno o más CUITs arriba.</p>
             </div>
         }
 
-        @if (!loading && result) {
+        @if (!isBatchMode && result) {
             <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
                 <div class="card-body bg-white p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                     <div>
-                        <span class="badge bg-secondary-subtle text-secondary fw-semibold mb-1 text-uppercase tracking-wider"
-                              style="font-size: 0.75rem;">Razón Social / Denominación</span>
+                        <span class="badge bg-secondary-subtle text-secondary fw-semibold mb-1 text-uppercase tracking-wider" style="font-size: 0.75rem;">Razón Social / Denominación</span>
                         <h4 class="fw-bold text-dark m-0">{{ result.denominacion }}</h4>
                     </div>
-                    <div class="text-md-end">
-                        <span class="text-muted d-block small mb-1">Identificación Fiscal</span>
-                        <span class="badge bg-dark fs-6 font-monospace px-3 py-2">CUIT: {{ result.cuit }}</span>
-                    </div>
+                    <span class="badge bg-dark fs-6 font-monospace px-3 py-2">CUIT: {{ result.cuit }}</span>
                 </div>
             </div>
+            <ng-container *ngTemplateOutlet="detailedInfo; context: {$implicit: result, history: historicalData}"></ng-container>
+        }
 
-            <div class="row g-3">
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card card-dashboard shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-cash-coin text-primary fs-5"></i>
-                                <span class="metric-title">Deuda Consolidada</span>
-                            </div>
-                            <h3 class="fw-bold text-dark mt-2 mb-0">
-                                ${{ result.deudaTotal.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}
-                            </h3>
-                            <span class="text-muted small mt-1 d-block">Monto total en el sistema financiero</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card card-dashboard shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="bi bi-shield-exclamation text-warning fs-5"></i>
-                                <span class="metric-title">Clasificación de Riesgo</span>
-                            </div>
-                            <div>
-                                <span class="situation-badge {{ getSituationClass(result.situacion) }}">
-                                    Situación {{ result.situacion }} - {{ getSituationLabel(result.situacion) }}
-                                </span>
-                            </div>
-                            <span class="text-muted small mt-1 d-block">Estado actual informado</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card card-dashboard shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-bank text-info fs-5"></i>
-                                <span class="metric-title">Entidades Acreedoras</span>
-                            </div>
-                            <h3 class="fw-bold text-dark mt-2 mb-0">
-                                {{ result.cantidadEntidades }} 
-                                <span class="fs-6 fw-normal text-muted">bancos / financieras</span>
-                            </h3>
-                            <span class="text-muted small mt-1 d-block">Instituciones que reportan deuda</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            @if (result.cheques && result.cheques.cantidad > 0) {
-                <div class="alert alert-warning rounded-3 shadow-sm mt-4 d-flex justify-content-between align-items-center" role="alert">
-                    <div>
-                        <i class="bi bi-wallet2 me-2"></i>
-                        <strong>Atención:</strong> Registra {{ result.cheques.cantidad }} cheques rechazados.
-                    </div>
-                    <span class="fw-bold">${{ result.cheques.montoTotal.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</span>
-                </div>
-            }
-
-            @if (historicalData.length > 0) {
-                <app-history-chart [historyData]="historicalData" 
-                                   [clientName]="result.denominacion"
-                                   [clientCuit]="result.cuit">
-                </app-history-chart>
-            }
-
-            <div class="card border-0 shadow-sm mt-4 rounded-3 overflow-hidden">
-                <div class="card-header bg-dark text-white p-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-bank fs-5"></i>
-                    <h5 class="m-0 fw-semibold">Detalle de Deudas por Institución</h5>
+        @if (isBatchMode && resultsArray.length > 0) {
+            <div class="card shadow-sm border-0 mt-4 overflow-hidden">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-secondary">
+                        <i class="bi bi-list-check me-2"></i>Resultados de Consulta Masiva
+                    </h5>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light text-uppercase font-monospace small text-muted">
+                        <thead class="table-light">
                             <tr>
-                                <th scope="col" class="ps-4">Entidad / Organización</th>
-                                <th scope="col" class="text-center">Período</th>
-                                <th scope="col" class="text-center">Situación</th>
-                                <th scope="col" class="text-end pe-4">Monto Informado</th>
+                                <th class="ps-4">CUIT</th>
+                                <th>Denominación</th>
+                                <th>Situación</th>
+                                <th class="text-center">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @for (item of result.entidadesDetalle; track item.entidad) {
+                            @for (item of resultsArray; track item.cuit) {
                                 <tr>
-                                    <td class="ps-4 fw-semibold text-dark">{{ item.entidad }}</td>
-                                    
-                                    <td class="text-center font-monospace">
-                                        {{ result.periodo ? (result.periodo.toString().substring(4, 6) + '/' + result.periodo.toString().substring(0, 4)) : '-' }}
+                                    <td class="ps-4 fw-bold font-monospace">{{ item.cuit }}</td>
+                                    <td>{{ item.data?.denominacion || '-' }}</td>
+                                    <td>
+                                        @if (item.success && item.data) {
+                                            <span class="badge {{ getSituationClass(item.data.situacion) }}">
+                                                {{ getSituationLabel(item.data.situacion) }}
+                                            </span>
+                                        }
+                                        @else {
+                                            <span class="text-danger small">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> {{ item.errorMessage }}
+                                            </span>
+                                        }
                                     </td>
-                                    
                                     <td class="text-center">
-                                        <span class="badge {{ getSituationClass(item.situacion) }} px-2 py-2 small rounded-2">
-                                            Situación {{ item.situacion }} - {{ getSituationLabel(item.situacion) }}
-                                        </span>
-                                    </td>
-                                    
-                                    <td class="text-end pe-4 fw-bold text-secondary font-monospace">
-                                        ${{ item.monto.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}
-                                    </td>
-                                </tr>
-                            }
-                            @empty {
-                                <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted small">
-                                        <i class="bi bi-info-circle me-1"></i> No se registran deudas activas asociadas a este CUIT.
+
+                                        @if (item.success) {
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" (click)="toggleDetail(item)">
+                                                <i class="bi" [ngClass]="item.showDetail ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                                                {{ item.showDetail ? 'Ocultar' : 'Ver detalle' }}
+                                            </button>
+                                        }
+
                                     </td>
                                 </tr>
+
+                                @if (item.showDetail && item.data) {
+                                    <tr class="table-active">
+                                        <td colspan="4" class="p-4 border-top-0">
+                                            <div class="card card-body bg-white border-0 shadow-sm">
+                                                <ng-container *ngTemplateOutlet="detailedInfo; context: { $implicit: item.data, itemRef: item }"></ng-container>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             }
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            @if (result.cheques && result.cheques.cantidad > 0) {
-                <div class="card border-0 shadow-sm mt-4 rounded-3 overflow-hidden border-start border-danger border-4">
-                    <div class="card-header bg-white p-3 d-flex align-items-center justify-content-between border-bottom">
-                        <div class="d-flex align-items-center gap-2 text-danger">
-                            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-                            <h5 class="m-0 fw-bold">Registro de Cheques Rechazados</h5>
-                        </div>
-                        <span class="badge bg-danger px-3 py-2 font-monospace fs-6">
-                            Total: {{ result.cheques.cantidad }}
-                        </span>
-                    </div>
-                    <div class="table-responsive" style="max-height: 450px;">
-                        <table class="table table-hover align-middle mb-0 small">
-                            <thead class="table-light text-uppercase text-muted font-monospace" style="font-size: 0.75rem;">
-                                <tr>
-                                    <th scope="col" class="ps-3">Nro Cheque</th>
-                                    <th scope="col">Causal Rechazo</th>
-                                    <th scope="col" class="text-center">Fecha Rechazo</th>
-                                    <th scope="col" class="text-end">Monto</th>
-                                    <th scope="col" class="text-center">Fecha Pago / Multa</th>
-                                    <th scope="col" class="pe-3 text-center">Estado Multa</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (cheque of result.cheques.detalle; track cheque.nroCheque + '-' + cheque.fechaRechazo) {
-                                    <tr>
-                                        <td class="ps-3 font-monospace fw-bold text-dark">{{ cheque.nroCheque }}</td>
-                                        <td>
-                                            <span class="text-wrap d-block text-dark fw-semibold" style="max-width: 250px;">
-                                                {{ cheque.causal }}
-                                            </span>
-                                            @if (cheque.denomJuridica) {
-                                                <small class="text-muted d-block mt-1">Vinculado a: {{ cheque.denomJuridica }}</small>
-                                            }
-                                        </td>
-                                        <td class="text-center font-monospace">{{ cheque.fechaRechazo | date:'dd/MM/yyyy' }}</td>
-                                        
-                                        <td class="text-end fw-bold font-monospace text-danger">
-                                            ${{ cheque.monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                                        </td>
-
-                                        <td class="text-center font-monospace">
-                                            @if (cheque.fechaPago) {
-                                                <span class="d-block text-success small">💰 Pago: {{ cheque.fechaPago | date:'dd/MM/yyyy' }}</span>
-                                            }
-                                            @if (cheque.fechaPagoMulta) {
-                                                <span class="d-block text-info small">⚖️ Multa: {{ cheque.fechaPagoMulta | date:'dd/MM/yyyy' }}</span>
-                                            }
-                                            @if (!cheque.fechaPago && !cheque.fechaPagoMulta) {
-                                                <span class="text-muted small">-</span>
-                                            }
-                                        </td>
-
-                                        <td class="pe-3 text-center">
-                                            @let status = getCheckStatusConfig(cheque);
-                                            <span class="badge rounded-pill font-monospace px-2.5 py-1.5" [ngClass]="status.class">
-                                                {{ status.label }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
         }
+
     </div>
 </div>
+
+<ng-template #detailedInfo let-summary let-item="itemRef">
+    <div class="mb-4">
+        <app-metric-cards [summary]="summary"></app-metric-cards>
+    </div>
+
+    @if (item.historicalData && item.historicalData.length > 0) {
+        <div class="mb-4">
+            <app-history-chart
+                [historyData]="item.historicalData"
+                [clientName]="summary.denominacion"
+                [clientCuit]="summary.cuit">
+            </app-history-chart>
+        </div>
+    }
+    @else if (item.loadingHistory) {
+        <div class="p-5 text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Cargando historial...</p>
+        </div>
+    }
+    @else {
+        <div class="p-5 text-center text-muted border rounded-3 bg-light mb-4">
+            <i class="bi bi-graph-up d-block fs-2 mb-2 opacity-25"></i>
+            <p class="small m-0">No se registran datos históricos para el análisis evolutivo.</p>
+        </div>
+    }
+
+    @if (summary.cheques.cantidad > 0) {
+        <div class="mb-4">
+            <app-rejected-checks [checks]="summary.cheques.detalle"></app-rejected-checks>
+        </div>
+    }
+    @else {
+        <div class="alert alert-success mt-4 border-0 shadow-sm">
+            <i class="bi bi-check-circle-fill me-2"></i> No se registran cheques rechazados.
+        </div>
+    }
+
+    <div class="mb-4">
+        <app-entity-details [details]="summary.entidadesDetalle"></app-entity-details>
+    </div>
+</ng-template>

@@ -1,23 +1,27 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { forkJoin } from 'rxjs';
+import { forkJoin, firstValueFrom } from 'rxjs';
 
 import { ConsultationService } from '../../core/services/consultation/consultation-service';
 import { Spinner } from "../../shared/components/spinner/spinner";
 import { Header } from "../../shared/components/header/header";
 import { HistoryChart } from './components/history-chart/history-chart';
+import { MetricCards } from './components/metric-cards/metric-cards';
+import { RejectedChecks } from './components/rejected-checks/rejected-checks';
+import { EntityDetails } from './components/entity-details/entity-details';
 
 import { ICreditSummary } from '../../models/interfaces/icredit-summary';
 import { IHistoricalItem } from '../../models/interfaces/ihistorical-item';
-import { CREDIT_SITUATUION_CONFIG } from '../../models/constants/credit-situation-config';
-import { REJECTED_CHECKS_CONFIG } from '../../models/constants/rejected-checks-config';
-import { ICheckStatusConfig } from '../../models/interfaces/icheck-status-config';
+import { IApiResponse } from '../../models/interfaces/iapi-response';
+import { IBatchItem } from '../../models/interfaces/ibatch-item';
+
+import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-formatters';
 
 @Component({
   selector: 'app-consultation',
   standalone: true,
-  imports: [CommonModule, FormsModule, Spinner, Header, HistoryChart],
+  imports: [CommonModule, FormsModule, Spinner, Header, HistoryChart, MetricCards, RejectedChecks, EntityDetails],
   templateUrl: './consultation.html',
   styleUrl: './consultation.scss',
 })
@@ -25,109 +29,180 @@ export class Consultation {
 
   cuit: string = '';
   loading: boolean = false;
+  
   result: ICreditSummary | null = null;
   errorMessage: string | null = null;
-  errorType: 'warning' | 'danger' | null = null; 
+  errorType: 'warning' | 'danger' | null = null;
   historicalData: IHistoricalItem[] = [];
+
+  isBatchMode: boolean = false;
+  resultsArray: IBatchItem[] = [];
 
   constructor(private consultationService: ConsultationService) { }
 
-  consult() {
-    if (!this.isValidCuit()) {
-      this.errorMessage = 'Formato de CUIT inválido';
+  getSituationClass = getSituationClass;
+  getSituationLabel = getSituationLabel;
+
+  /**
+   * Executes a query based on the CUIT entered by the user.
+   * @returns void.
+   */
+  consult(): void {
+    const cuits = this.getCleanCuits();
+
+    if (cuits.length === 0 || !this.isValidCuit()) {
+      this.errorMessage = 'Formato de CUIT inválido. Use 11 dígitos numéricos.';
+      this.errorType = 'warning';
+      return;
+    }
+
+    if (cuits.length > 5) {
+      this.errorMessage = 'El límite máximo es de 5 CUITs por consulta.';
       this.errorType = 'warning';
       return;
     }
 
     this.loading = true;
-    this.result = null;
-    this.historicalData = [];
     this.errorMessage = null;
     this.errorType = null;
+    this.isBatchMode = cuits.length > 1;
 
-    // Executes in parallel both the summary and historical data requests, and waits for both to complete before processing the results and updating the UI.
+    this.isBatchMode ? this.executeBatchConsult(cuits) : this.executeSingleConsult(cuits[0]);
+  }
+
+  /**
+   * Performs a simple query of the CUIT entered by the user.
+   * @param cuit The CUIT entered by the user.
+   * @returns void.
+   */
+  private executeSingleConsult(cuit: string): void {
+    this.result = null;
+    this.historicalData = [];
+
     forkJoin({
-      summary: this.consultationService.getCreditSummary(this.cuit),
-      history: this.consultationService.getHistoricalEvolution(this.cuit)
+      summary: this.consultationService.getCreditSummary(cuit),
+      history: this.consultationService.getHistoricalEvolution(cuit)
     }).subscribe({
-      next: (response: any) => {
+      next: (response) => {
         if (response.summary.error) {
-          this.errorMessage = response.summary.message || 'Error al consultar.';
-          this.errorType = response.summary.type || 'danger';
-          this.loading = false;
-          return;
+          this.errorMessage = response.summary.message ?? 'Error desconocido';
+          this.errorType = response.summary.type as 'warning' | 'danger';
+        }
+        else {
+          this.result = response.summary.data ?? null;
+          this.historicalData = response.history.data ?? [];
+          this.cuit = '';
         }
 
-        // The backend has already consolidated the debts and detailed checks within .data
-        this.result = response.summary.data ?? null;
-        
-        // Save the historical data for the chart, handling potential errors and ensuring we have an array to work with in the chart component.
-        this.historicalData = response.history?.error ? [] : (response.history?.data ?? []);
         this.loading = false;
-
-        this.cuit = ''; // Clear the input after a successful consultation
       },
-      error: () => {
-        this.errorMessage = 'No se pudo establecer comunicación con la pasarela de servicios.';
-        this.errorType = 'danger';
-        this.loading = false;
-      }
+      error: () => this.handleConnectionError()
     });
   }
 
   /**
-   * Gets the CSS class for the credit situation based on the configuration
-   * @param situation The credit situation
-   * @returns The CSS class for the given situation
+   * Execute a batch of CUITs.
+   * @param cuits The batch of CUITs.
+   * @returns void.
    */
-  getSituationClass(situation: number): string {
-    const validSituation = situation > 5 ? 0 : situation;
-    return CREDIT_SITUATUION_CONFIG[validSituation]?.class || 'situacion-0';
+  private executeBatchConsult(cuits: string[]): void {
+    this.resultsArray = [];
+    this.loading = true;
+
+    this.consultationService.getBatchCreditSummary(cuits).subscribe({
+      next: (responses: IApiResponse<ICreditSummary>[]) => {
+
+        this.resultsArray = responses.map((res, index) => ({
+          cuit: cuits[index],
+          denominacion: res.data?.denominacion,
+          success: !res.error,
+          data: res.data ?? null,
+          errorMessage: res.error ? (res.message || 'Error en la consulta') : null,
+          showDetail: false,
+          loadingHistory: false,
+          historicalData: []
+        }));
+
+        if (this.resultsArray.length > 0 && this.resultsArray.every(r => !r.success)) {
+          this.errorMessage = 'No se pudo obtener información de los CUITs solicitados. La conexión con el API del BCRA fue interrumpida.';
+          this.errorType = 'danger';
+        }
+
+        if (this.resultsArray.every(r => !r.success)) {
+          this.resultsArray = []; 
+        }
+
+        this.loading = false;
+      },
+      error: () => this.handleConnectionError()
+    });
   }
 
   /**
-   * Gets the label for the credit situation based on the configuration
-   * @param situation The credit situation
-   * @returns The label for the given situation
+   * Show or hide the CUIT detail.
+   * @param item The item of the Batch.
+   * @returns Promise<void> 
    */
-  getSituationLabel(situation: number): string {
-    const validSituation = situation > 5 ? 0 : situation;
-    return CREDIT_SITUATUION_CONFIG[validSituation]?.label || 'Sin clasificación';
-  }
-
-  /**
-   * Gets the configuration for the check status based on the cheque data, determining if it has a BCRA fine, if it has been regularized, or if no penalty applies, and returns the appropriate label and CSS class for display
-   * @param cheque The cheque object to evaluate
-   * @returns An object with the label and CSS class corresponding
-   */
-  getCheckStatusConfig(cheque: any): ICheckStatusConfig {
-    if (cheque.estadoMulta) {
-      return REJECTED_CHECKS_CONFIG[cheque.estadoMulta] || REJECTED_CHECKS_CONFIG['NO_APLICA'];
+  async toggleDetail(item: IBatchItem): Promise<void> {
+    item.showDetail = !item.showDetail;
+    
+    if (item.showDetail && (!item.historicalData || item.historicalData.length === 0)) {
+      item.loadingHistory = true;
+      
+      try {
+        const response = await firstValueFrom(this.consultationService.getHistoricalEvolution(item.cuit));
+        
+        if (response && !response.error) {
+          item.historicalData = [...(response.data ?? [])];
+        }
+        else {
+          item.historicalData = [];
+        }
+      }
+      catch {
+        item.historicalData = [];
+      }
+      finally {
+        setTimeout(() => {
+          item.loadingHistory = false;
+        }, 50);
+      }
     }
-
-    if (cheque.fechaPago || cheque.fechaPagoMulta) {
-      return REJECTED_CHECKS_CONFIG['REGULARIZADO'];
-    }
-
-    return REJECTED_CHECKS_CONFIG['NO_APLICA'];
   }
 
   /**
-   * Handles the input event for the CUIT field, preventing letters and keeping 11 digits
-   * @param event The input event
+   * Handler for connections errors with the API.
+   * @returns void.
    */
-  onCuitInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    let value = input.value.replace(/\D/g, '');
-    value = value.slice(0, 11);
-    this.cuit = value;
+  private handleConnectionError(): void {
+    this.errorMessage = 'No se pudo establecer comunicación con la pasarela de servicios.';
+    this.errorType = 'danger';
+    this.loading = false;
   }
 
   /**
-   * Validates if the CUIT is in the correct format
-   * @returns True if the CUIT is valid, false otherwise
+   * Get a valid CUIT.
+   * @returns A string with the valid CUIT/CUITs.
+   */
+  private getCleanCuits(): string[] {
+    return this.cuit.split(/[\s,]+/).filter(c => c.length > 0);
+  }
+
+  /**
+   * Check if the entered CUIT is a valid CUIT. 
+   * @returns True or false.
    */
   isValidCuit(): boolean {
-    return /^\d{11}$/.test(this.cuit);
+    const cuits = this.getCleanCuits();
+    return cuits.length > 0 && cuits.every(c => /^\d{11}$/.test(c));
+  }
+
+  /**
+   * Event that validates the CUIT entry.
+   * @param event The event triggered.
+   */
+  onCuitInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.cuit = input.value.replace(/[^0-9,\s]/g, '');
   }
 }

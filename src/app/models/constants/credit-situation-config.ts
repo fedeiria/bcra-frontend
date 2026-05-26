@@ -7,27 +7,27 @@ export const CREDIT_SITUATUION_CONFIG: Record<number, ISituationStyle> = {
         color: '#6c757d'
     },
     1: {
-        label: 'Normal',
+        label: 'Situacion 1 - Normal',
         class: 'situacion-1',
         color: '#28a745'
     },
     2: {
-        label: 'Seguimiento especial',
+        label: 'Situacion 2 - Seguimiento especial',
         class: 'situacion-2',
         color: '#ffc107'
     },
     3: {
-        label: 'Riesgo medio',
+        label: 'Situacion 3 - Riesgo medio',
         class: 'situacion-3',
         color: '#fd7e14'
     },
     4: {
-        label: 'Alto riesgo',
+        label: 'Situacion 4 - Alto riesgo',
         class: 'situacion-4',
         color: '#dc3545'
     },
     5: {
-        label: 'Irrecuperable',
+        label: 'Situacion 5 - Irrecuperable',
         class: 'situacion-5',
         color: '#8b0000'
     }

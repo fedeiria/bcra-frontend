@@ -1,6 +1,6 @@
 export interface ICheckDetail {
     nroCheque: number;
-    fechaRechazo: string;      // Format "YYYY-MM-DD"
+    fechaRechazo: string;
     monto: number;
     fechaPago: string | null;
     fechaPagoMulta: string | null;

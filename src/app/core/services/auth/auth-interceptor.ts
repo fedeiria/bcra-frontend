@@ -1,40 +1,70 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 
 import { AuthService } from './auth-service';
-import { catchError, throwError } from 'rxjs';
+
+let isRefreshing = false;
+const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
-  const router = inject(Router);
   const authService = inject(AuthService);
-  const token = authService.getToken();
+  const router = inject(Router);
 
-  // Clone the request and add the Authorization header if the token exists.
+  // Omit login and refresh endpoints to avoid infinite loops
+  if (request.url.includes('/login') || request.url.includes('/refresh')) {
+    return next(request);
+  }
+
+  const token = authService.getToken();
   if (token) {
     request = request.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
+      setHeaders: { Authorization: `Bearer ${token}` }
     });
   }
 
-  // Fordward the request and handle errors, particularly 401 Unauthorized responses.
   return next(request).pipe(
-    catchError((error: any) => {
-      if (error instanceof HttpErrorResponse) {
-        // If nestJS returns a 401, it means the token is invalid or expired
-        if (error.status === 401) {
-          console.warn('La sesión expiró o el token es inválido. Redirigiendo al login...');
-          
-          // Clean up the session (remove token, user info, etc.)
-          authService.logout();
-          
-          // Redirect to the login page.
-          router.navigate(['/login']);
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshTokenSubject.next(null);
+
+          return authService.refreshToken().pipe(
+            switchMap((response: any) => {
+              isRefreshing = false;
+              const newToken = response.data.accessToken;
+              refreshTokenSubject.next(newToken);
+              
+              // Retry the original request with the new token
+              return next(request.clone({
+                setHeaders: { Authorization: `Bearer ${newToken}` }
+              }));
+            }),
+            catchError((refreshError) => {
+              // If the /refresh endpoint also returns an error, the session has completely died.
+              isRefreshing = false;
+              authService.logout();
+              router.navigate(['/login']);
+              return throwError(() => refreshError);
+            })
+          );
+        }
+        else {
+          // If there is already a refresh process underway, I pause this secondary request and wait for the BehaviorSubject to issue the new token
+          return refreshTokenSubject.pipe(
+            filter(token => token !== null),
+            take(1),
+            switchMap(newToken => {
+              return next(request.clone({
+                setHeaders: { Authorization: `Bearer ${newToken}` }
+              }));
+            })
+          );
         }
       }
-      // Resend the error to be handled by other parts of the app if needed.
       return throwError(() => error);
     })
   );

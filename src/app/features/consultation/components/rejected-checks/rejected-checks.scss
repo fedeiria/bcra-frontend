@@ -1,0 +1,12 @@
+.badge-check {
+    padding: 0.4em 0.8em;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    display: inline-block;
+}
+
+.status-success { background-color: #d4edda; color: #155724; } // Situación 1
+.status-warning { background-color: #fff3cd; color: #856404; } // Situación 2
+.status-critical { background-color: #f8d7da; color: #721c24; } // Situación 4
+.status-neutral { background-color: #e9ecef; color: #495057; } // Situación 0
+.status-pending { background-color: #ffe8d6; color: #fe7e14; } // Situación 3

@@ -5,8 +5,8 @@ $white: #ffffff;
 
 .main-container {
     background-color: $bg-light;
-    min-height: calc(100vh - 76px);
-    padding-top: 2rem;
+    min-height: calc(100vh - 80px);
+    padding-top: 3rem;
     padding-bottom: 3rem;
 }
 
@@ -105,4 +105,71 @@ $white: #ffffff;
     border-radius: 16px;
     padding: 3.5rem 2rem;
     border: 2px dashed #e2e8f0;
+}
+
+// Estilos para los Badges de Cheques
+.badge-check {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border: 1px solid transparent;
+    min-width: 100px;
+    text-align: center;
+
+    &.status-critical {
+        background-color: #fee2e2; // Rojo suave
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    &.status-success {
+        background-color: #dcfce7; // Verde suave
+        color: #15803d;
+        border-color: #bbf7d0;
+    }
+
+    &.status-warning {
+        background-color: #fef3c7; // Ámbar suave
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    &.status-neutral {
+        background-color: #f1f5f9; // Gris suave
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+
+    &.status-pending {
+        background-color: #f8fafc;
+        color: #94a3b8;
+        border-style: dashed;
+        border-color: #cbd5e1;
+    }
+}
+
+// Estilo de la tabla de cheques para que no se vea "apretada"
+.table-cheques {
+    th {
+        font-size: 0.75rem;
+        //color: #64748b;
+        text-transform: uppercase;
+        background-color: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 12px 8px;
+    }
+    
+    td {
+        padding: 14px 8px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
 }

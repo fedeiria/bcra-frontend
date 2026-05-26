@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { ILoginResponse } from '../../../models/interfaces/ilogin-response';
 import { APP_CONFIG } from '../../../models/constants/app-config';
+import { IUser } from '../../../models/interfaces/iuser';
 
 @Injectable({
   providedIn: 'root',
@@ -14,10 +15,10 @@ export class AuthService {
 
   private readonly API_URL = APP_CONFIG.api.authEndpoint;
   private readonly TOKEN_KEY = APP_CONFIG.session.tokenKey;
+  private readonly REFRESH_TOKEN_KEY = APP_CONFIG.session.refreshTokenKey;
   private readonly USER_KEY = APP_CONFIG.session.userKey;
-  private readonly TIMESTAMP_KEY = APP_CONFIG.session.timestampKey;
 
-  private currentUserSubject = new BehaviorSubject<any>(null);
+  private currentUserSubject = new BehaviorSubject<IUser | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
@@ -26,8 +27,8 @@ export class AuthService {
 
   /**
    * Logs in the user with the provided email and password.
-   * @param email The email of the user trying to log in
-   * @param passwordPlain The plain text password of the user trying to log in
+   * @param email The email of the user trying to log in.
+   * @param passwordPlain The plain text password of the user trying to log in.
    * @returns Observable that emits the login response from the API, which includes the access token and user information if successful, or an error message if not.
    */
   login(email: string, passwordPlain: string): Observable<ILoginResponse> {
@@ -35,28 +36,43 @@ export class AuthService {
       tap(response => {
         if (!response.error && response.data?.accessToken) {
           localStorage.setItem(this.TOKEN_KEY, response.data.accessToken);
-          localStorage.setItem(this.USER_KEY, JSON.stringify(response.data.user));
-          localStorage.setItem(this.TIMESTAMP_KEY, Date.now().toString());
 
+          if (response.data.refreshToken) {
+            localStorage.setItem(this.REFRESH_TOKEN_KEY, response.data.refreshToken);
+          }
+
+          localStorage.setItem(this.USER_KEY, JSON.stringify(response.data.user));
           this.currentUserSubject.next(response.data.user);
-          this.startAutoLogoutTimer(APP_CONFIG.session.tokenExpirationMs);
         }
       })
     );
   }
 
   /**
-   * Logs out the current user by removing the token from localStorage and resetting the current user subject. This will effectively end the user's session and update any subscribed components to reflect that no user is currently logged in.
+   * Request dedicated to requesting a new access token using the update token.
+   * @returns Observable<any> with the new access token.
+   */
+  refreshToken(): Observable<any> {
+    const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+
+    return this.http.post<any>(`${this.API_URL}/refresh`, { refreshToken }).pipe(
+      tap(response => {
+        if (!response.error && response.data?.accessToken) {
+          localStorage.setItem(this.TOKEN_KEY, response.data.accessToken);
+        }
+      })
+    );
+  }
+
+  /**
+   * Logs out the current user by removing the token from localStorage and resetting the current user subject.
+   * This will effectively end the user's session and update any subscribed components to reflect that no user is currently logged in.
+   * @returns void.
    */
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
-    localStorage.removeItem(this.TIMESTAMP_KEY);
-
-    if (this.logoutTimer) {
-      clearTimeout(this.logoutTimer);
-    }
-
     this.currentUserSubject.next(null);
   }
 
@@ -69,46 +85,43 @@ export class AuthService {
   }
 
   /**
-   * Checks if there is a valid token in localStorage when the service is initialized. If a token exists, it assumes the user is logged in and updates the current user subject accordingly. In a real application, you might want to decode the token to get user information and check its validity (e.g., expiration) instead of just checking for its existence.
+   * Decode the JWT payload to extract user data.
+   * @returns any.
    */
-  private checkToken(): void {
-    const token = this.getToken();
-    const currentUser = localStorage.getItem(this.USER_KEY);
-    const loginTimestamp = localStorage.getItem(this.TIMESTAMP_KEY);
+  private decodeToken(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
 
-    if (token && currentUser && loginTimestamp) {
-      const timeElapsed = Date.now() - parseInt(loginTimestamp, 10);
-      const expirationLimit = APP_CONFIG.session.tokenExpirationMs; // <-- Tiempo parametrizado
-
-      if (timeElapsed >= expirationLimit) {
-        this.logout();
-      }
-      else {
-        this.currentUserSubject.next(JSON.parse(currentUser));
-        
-        const timeLeft = expirationLimit - timeElapsed;
-        this.startAutoLogoutTimer(timeLeft);
-      }
+      return JSON.parse(window.atob(base64));
     }
-    else if (token) {
-      this.currentUserSubject.next({ email: 'Usuario', loggedIn: true });
+    catch (error) {
+      console.error('Error al decodificar el token', error);
+      return null;
     }
   }
 
   /**
-   * Set a timer to automatically log out the user after a specified duration. This is useful for implementing session timeouts. If the timer expires, the user will be logged out and redirected to the login page. If the user logs out manually or if a new timer is set, any existing timer will be cleared to prevent unintended logouts.
-   * @param duration The duration (in milliseconds) after which the user should be automatically logged out.
+   * Checks if there is a valid token in localStorage when the service is initialized.
+   * @returns void.
    */
-  private startAutoLogoutTimer(duration: number): void {
-    if (this.logoutTimer) {
-      clearTimeout(this.logoutTimer);
+  private checkToken(): void {
+    const token = this.getToken();
+    const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    const storedUser = localStorage.getItem(this.USER_KEY);
+
+    // If there is a token (of any type) and the user data is saved
+    if ((token || refreshToken) && storedUser) {
+      try {
+        // Restore the user in memory (BehaviorSubject)
+        this.currentUserSubject.next(JSON.parse(storedUser));
+      }
+      catch (e) {
+        this.logout();
+      }
     }
-
-    this.logoutTimer = setTimeout(() => {
-      console.warn('Tiempo de sesión cumplido de forma pasiva. Forzando logout...');
+    else {
       this.logout();
-
-      window.location.href = '/login';
-    }, duration);
+    }
   }
 }

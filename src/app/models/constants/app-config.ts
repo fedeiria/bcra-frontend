@@ -4,13 +4,13 @@ export const APP_CONFIG = {
         authEndpoint: 'http://localhost:3000/auth',
     },
     session: {
-        tokenExpirationMs: 2 * 60 * 60 * 1000, // 2hs
-        tokenKey: 'bcra_token',
+        tokenKey: 'token',
+        refreshTokenKey: 'refresh_token',
         userKey: 'current_user',
         timestampKey: 'login_timestamp'
     },
     security: {
         maxLoginAttempts: 5,
-        allowedRoles: ['ADMIN', 'CREDITS_USER', 'VIEWER']
+        allowedRoles: ['ADMIN', 'USER']
     }
 };

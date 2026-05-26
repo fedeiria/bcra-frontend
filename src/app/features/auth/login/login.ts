@@ -24,7 +24,11 @@ export class Login {
   isLoading = false;
   errorMessage = '';
 
-  onSubmit() {
+  /**
+   * Check the credentials login.
+   * @returns void.
+   */
+  onSubmit(): void {
     if (this.loginForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
@@ -32,17 +36,19 @@ export class Login {
       const { email, password } = this.loginForm.value;
 
       this.authService.login(email, password).subscribe({
-        next: (response) => {
-          if (!response.error) {
-            this.router.navigate(['/consultation']);
-          }
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.errorMessage = 'Credenciales inválidas. Intente nuevamente.';
-          console.error(err);
+      next: (response) => {
+        if (!response.error && response.data?.accessToken) {
+          this.router.navigate(['/consultation']).then(() => {
+             this.isLoading = false;
+          });
         }
-      });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = 'Credenciales inválidas. Intente nuevamente.';
+        console.error(err);
+      }
+    });
     }
   }
 }

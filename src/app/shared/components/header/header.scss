@@ -1,61 +1,122 @@
 // Institutional color palette
 $primary-bank: #0a3a60;
 $primary-dark: #06243d;
+$accent-gold: #f59f00;
 
 .app-header {
-    height: 76px;
+    min-height: 80px;
+    height: auto;
     background: linear-gradient(135deg, $primary-bank 0%, $primary-dark 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-bottom: 3px solid #f59f00;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    border-bottom: 3px solid $accent-gold;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
 
-    .header-icon-box {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 6px 10px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+    .container-fluid {
+        position: relative;
     }
 
     .app-title {
-        font-size: 16px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        line-height: 1.2;
+        font-weight: 100;
+        font-size: 1.1rem;
     }
 
     .app-subtitle {
-        font-size: 11px;
-        letter-spacing: 0.3px;
+        font-size: 0.85rem;
     }
 
-    .user-avatar-placeholder {
-        cursor: pointer;
-        transition: opacity 0.2s;
+    .header-icon-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-item-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.2s ease-in-out;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        display: inline-block;
+        width: 100%;
+
+        @media (min-width: 992px) {
+            width: auto;
+        }
 
         &:hover {
-            opacity: 0.8;
+            color: white;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        &.active-link {
+            color: white;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.12);
+
+            border-left: 4px solid $accent-gold;
+
+            @media (min-width: 992px) {
+                position: absolute !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                margin: 0 !important;
+                display: flex;
+                flex-direction: row;
+            }
         }
     }
 
-    // Small vertical divider between user info and logout button
-    .header-divider {
-        width: 1px;
-        height: 24px;
-        background-color: rgba(255, 255, 255, 0.15);
-        margin: 0 8px; // Un poquito más de separación horizontal
+    .user-email {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: white;
     }
 
-    // Logout button with a subtle hover effect
+    .user-role {
+        font-size: 0.75rem;
+        color: #b2bec3;
+    }
+
+    .header-divider {
+        width: 1px;
+        height: 25px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .absolute-center-lg {
+        @media (min-width: 992px) {
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+            padding: 0 !important;
+
+            display: flex;
+            flex-direction: row;
+            width: auto !important;
+        }
+    }
+
     .btn-logout-nav {
         background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.25);
         color: rgba(255, 255, 255, 0.85);
-        padding: 0.35rem 0.75rem;
+        padding: 0.5rem 1.2rem;
         border-radius: 8px;
         font-size: 0.85rem;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         cursor: pointer;
         transition: all 0.2s ease-in-out;
@@ -76,6 +137,16 @@ $primary-dark: #06243d;
 
         &:active {
             transform: scale(0.96);
+        }
+    }
+
+    .border-white-10 {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    @media (min-width: 992px) {
+        .border-lg-0 {
+            border: 0 !important;
         }
     }
 }

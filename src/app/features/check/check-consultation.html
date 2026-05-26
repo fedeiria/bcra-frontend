@@ -1,0 +1,160 @@
+<app-header></app-header>
+
+<div>
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold text-primary-dark">Consulta de Cheques Denunciados</h2>
+                <p class="text-muted">Verificá la validez de un cheque consultando la base de datos del BCRA</p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Entidad Bancaria</label>
+                                <select class="form-select custom-select" [(ngModel)]="selectedBankCode"
+                                    [disabled]="loadingBanks || loadingQuery">
+
+                                    @if (loadingBanks) {
+                                        <option value="" disabled selected>Cargando entidades...</option>
+                                    }
+                                    @else {
+                                        <option value="" selected disabled>Seleccioná el banco...</option>
+
+                                        @for (bank of banks; track $index) {
+                                            <option [value]="bank.codigoEntidad">{{ bank.denominacion }}</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-12 mt-3">
+                                <label class="form-label fw-semibold">Número de Cheque</label>
+                                <input type="text" class="form-control" [(ngModel)]="checkNumber"
+                                    placeholder="Ej: 12345678" maxlength="10" [disabled]="loadingQuery || loadingBanks"
+                                    (keypress)="allowOnlyNumbers($event)">
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <button class="btn btn-primary-bank w-100 py-2 shadow-sm"
+                                    [disabled]="!isFormValid || loadingQuery" (click)="consultReportedCheck()">
+                                    @if (loadingQuery) {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Consultando...</span>
+                                    }
+                                    @else {
+                                        <i class="bi bi-search me-2"></i>Consultar Estado
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (errorMessage) {
+                    <div class="alert alert-danger d-flex align-items-center animate__animated animate__fadeIn">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>{{ errorMessage }}</div>
+                    </div>
+                }
+
+                @if (result && result.results) {
+                    <div class="animate__animated animate__fadeInUp mt-4">
+                        <div class="card result-card shadow-lg" [class.result-denounced]="result.results.denunciado"
+                            [class.result-clean]="!result.results.denunciado">
+
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle p-3 me-3 icon-container"
+                                            [style.background-color]="result.results.denunciado ? '#e53e3e' : '#38a169'">
+                                            <i class="bi" [class.bi-shield-fill-x]="result.results.denunciado"
+                                                [class.bi-shield-fill-check]="!result.results.denunciado"></i>
+                                        </div>
+                                        <h4 class="reported-title"
+                                            [style.color]="result.results.denunciado ? '#c53030' : '#2f855a'">
+                                            {{ result.results.denunciado ? 'Cheque Reportado' : 'Cheque sin Denuncias' }}
+                                        </h4>
+                                    </div>
+                                    <span class="badge badge-status" [class.bg-danger]="result.results.denunciado"
+                                        [class.bg-success]="!result.results.denunciado">
+                                        {{ result.results.denunciado ? 'DENUNCIADO' : 'ACTIVO' }}
+                                    </span>
+                                </div>
+
+                                <div class="info-grid-container rounded-2 p-3 mb-4">
+                                    <div class="row g-4">
+                                        <div class="col-md-4">
+                                            <div class="data-label">NÚMERO DE CHEQUE</div>
+                                            <div class="data-value">{{ result.results.numeroCheque }}</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="data-label">FECHA DE PROCESAMIENTO</div>
+                                            <div class="data-value text-primary-dark">
+                                                <i class="bi bi-calendar3 me-1"></i> {{ result.results.fechaProcesamiento | date:'dd/MM/yyyy' }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="data-label">ENTIDAD BANCARIA</div>
+                                            <div class="data-value">{{ result.results.denominacionEntidad }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if (result.results.denunciado && result.results.detalles.length > 0) {
+
+                                    <div class="causales-section mt-2">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="bi bi-info-circle-fill text-danger me-2"></i>
+                                            <h6 class="fw-bold mb-0 text-uppercase small letter-spacing-1">Causales de laDenuncia</h6>
+                                        </div>
+
+                                        <div class="table-responsive mt-2">
+                                            <table class="table table-sm table-custom mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-start">Sucursal</th>
+                                                        <th class="text-center">Cuenta Corriente</th>
+                                                        <th class="text-end">Motivo de la Denuncia</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+
+                                                    @for (detalle of result.results.detalles; track $index) {
+                                                        <tr class="align-middle">
+                                                            <td class="text-start fw-bold">#{{ detalle.sucursal }}</td>
+                                                            <td class="text-center">{{ detalle.numeroCuenta }}</td>
+                                                            <td class="text-end">
+                                                                <span class="text-danger-emphasis bg-danger-subtle px-2 py-1 rounded small fw-medium">
+                                                                    {{ detalle.causal }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    }
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                }
+
+                                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <small class="text-muted italic" style="font-size: 0.7rem;">
+                                        Información oficial obtenida de la API de Cheques Denunciados - BCRA
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
