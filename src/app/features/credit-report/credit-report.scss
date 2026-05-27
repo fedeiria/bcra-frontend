@@ -3,11 +3,24 @@ $primary-bank: #0a3a60;
 $bg-light: #f4f6f9;
 $white: #ffffff;
 
+/* Classes for each credit situation */
+.situacion-0 { background-color: #f1f3f5; color: #6c757d; }
+.situacion-1 { background-color: #e2f6e9; color: #28a745; }
+.situacion-2 { background-color: #fff9db; color: #f59f00; }
+.situacion-3 { background-color: #fff4e6; color: #f76707; }
+.situacion-4 { background-color: #fff5f5; color: #fa5252; }
+.situacion-5 { background-color: #ffe3e3; color: #c92a2a; }
+
 .main-container {
     background-color: $bg-light;
     min-height: calc(100vh - 80px);
     padding-top: 3rem;
-    padding-bottom: 3rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-container > .container {
+    flex-grow: 1; 
 }
 
 // Search Card
@@ -91,14 +104,6 @@ $white: #ffffff;
     width: 100%;
 }
 
-/* Classes for each credit situation */
-.situacion-0 { background-color: #f1f3f5; color: #6c757d; }
-.situacion-1 { background-color: #e2f6e9; color: #28a745; }
-.situacion-2 { background-color: #fff9db; color: #f59f00; }
-.situacion-3 { background-color: #fff4e6; color: #f76707; }
-.situacion-4 { background-color: #fff5f5; color: #fa5252; }
-.situacion-5 { background-color: #ffe3e3; color: #c92a2a; }
-
 // Empty State
 .empty-state-box {
     background: $white;
@@ -107,7 +112,7 @@ $white: #ffffff;
     border: 2px dashed #e2e8f0;
 }
 
-// Estilos para los Badges de Cheques
+// Cheks badges
 .badge-check {
     display: inline-block;
     padding: 0.4rem 0.75rem;
@@ -121,38 +126,38 @@ $white: #ffffff;
     text-align: center;
 
     &.status-critical {
-        background-color: #fee2e2; // Rojo suave
+        background-color: #fee2e2; // Soft red
         color: #b91c1c;
         border-color: #fecaca;
     }
 
     &.status-success {
-        background-color: #dcfce7; // Verde suave
+        background-color: #dcfce7; // Soft green
         color: #15803d;
         border-color: #bbf7d0;
     }
 
     &.status-warning {
-        background-color: #fef3c7; // Ámbar suave
+        background-color: #fef3c7; // Soft Ambar
         color: #92400e;
         border-color: #fde68a;
     }
 
     &.status-neutral {
-        background-color: #f1f5f9; // Gris suave
+        background-color: #f1f5f9; // Soft grey
         color: #475569;
         border-color: #e2e8f0;
     }
 
     &.status-pending {
-        background-color: #f8fafc;
+        background-color: #f8fafc; // Soft white
         color: #94a3b8;
         border-style: dashed;
         border-color: #cbd5e1;
     }
 }
 
-// Estilo de la tabla de cheques para que no se vea "apretada"
+// Checks table
 .table-cheques {
     th {
         font-size: 0.75rem;
@@ -171,5 +176,43 @@ $white: #ffffff;
 
     tr:last-child td {
         border-bottom: none;
+    }
+}
+
+// Footer
+.footer-disclaimer {
+    margin-top: auto; 
+    padding: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-top: 1px solid #dee2e6;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 1rem;
+
+    .footer-content {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .footer-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: #6c757d;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+    }
+
+    .footer-text {
+        color: #adb5bd;
+        font-size: 0.7rem;
+        line-height: 1.3;
+        font-style: italic;
+        margin-bottom: 0;
     }
 }

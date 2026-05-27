@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { forkJoin, firstValueFrom } from 'rxjs';
 
-import { ConsultationService } from '../../core/services/consultation/consultation-service';
+import { CreditReportService } from '../../core/services/credit-report/credit-report-service';
 import { Spinner } from "../../shared/components/spinner/spinner";
 import { Header } from "../../shared/components/header/header";
 import { HistoryChart } from './components/history-chart/history-chart';
@@ -19,13 +19,13 @@ import { IBatchItem } from '../../models/interfaces/ibatch-item';
 import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-formatters';
 
 @Component({
-  selector: 'app-consultation',
+  selector: 'app-credit-report',
   standalone: true,
   imports: [CommonModule, FormsModule, Spinner, Header, HistoryChart, MetricCards, RejectedChecks, EntityDetails],
-  templateUrl: './consultation.html',
-  styleUrl: './consultation.scss',
+  templateUrl: './credit-report.html',
+  styleUrl: './credit-report.scss',
 })
-export class Consultation {
+export class CreditReport {
 
   cuit: string = '';
   loading: boolean = false;
@@ -38,7 +38,7 @@ export class Consultation {
   isBatchMode: boolean = false;
   resultsArray: IBatchItem[] = [];
 
-  constructor(private consultationService: ConsultationService) { }
+  constructor(private creditReportService: CreditReportService) { }
 
   getSituationClass = getSituationClass;
   getSituationLabel = getSituationLabel;
@@ -80,8 +80,8 @@ export class Consultation {
     this.historicalData = [];
 
     forkJoin({
-      summary: this.consultationService.getCreditSummary(cuit),
-      history: this.consultationService.getHistoricalEvolution(cuit)
+      summary: this.creditReportService.getCreditSummary(cuit),
+      history: this.creditReportService.getHistoricalEvolution(cuit)
     }).subscribe({
       next: (response) => {
         if (response.summary.error) {
@@ -109,7 +109,7 @@ export class Consultation {
     this.resultsArray = [];
     this.loading = true;
 
-    this.consultationService.getBatchCreditSummary(cuits).subscribe({
+    this.creditReportService.getBatchCreditSummary(cuits).subscribe({
       next: (responses: IApiResponse<ICreditSummary>[]) => {
 
         this.resultsArray = responses.map((res, index) => ({
@@ -150,7 +150,7 @@ export class Consultation {
       item.loadingHistory = true;
       
       try {
-        const response = await firstValueFrom(this.consultationService.getHistoricalEvolution(item.cuit));
+        const response = await firstValueFrom(this.creditReportService.getHistoricalEvolution(item.cuit));
         
         if (response && !response.error) {
           item.historicalData = [...(response.data ?? [])];
@@ -198,11 +198,29 @@ export class Consultation {
   }
 
   /**
-   * Event that validates the CUIT entry.
+   * Event that validates the CUIT entry and limits it to 5 CUITs.
    * @param event The event triggered.
    */
   onCuitInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.cuit = input.value.replace(/[^0-9,\s]/g, '');
+    
+    // 1. replace any commas with spaces and leave only numbers and spaces
+    let sanitizedValue = input.value.replace(/,/g, ' ').replace(/[^0-9\s]/g, '');
+    
+    // 2. normalize multiple consecutive spaces to a single space
+    sanitizedValue = sanitizedValue.replace(/\s+/g, ' ');
+
+    // 3. split the string by spaces to analyze the individual CUITs.
+    let cuits = sanitizedValue.split(' ');
+
+    // 4. if the array has more than 5 elements, I trim it.
+    if (cuits.length > 5) {
+      cuits = cuits.slice(0, 5);
+      sanitizedValue = cuits.join(' ');
+    }
+
+    // 5. update the component variable and force the value into the input
+    this.cuit = sanitizedValue;
+    input.value = this.cuit; 
   }
 }

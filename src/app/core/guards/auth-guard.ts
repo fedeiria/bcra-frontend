@@ -2,7 +2,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { map, take } from 'rxjs';
 
-import { AuthService } from './auth-service';
+import { AuthService } from '../services/auth/auth-service';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
@@ -19,8 +19,6 @@ export const authGuard: CanActivateFn = (route, state) => {
       if (user || hasAccessToken || hasRefreshToken) {
         return true;
       }
-
-      console.warn('Acceso denegado por el Guard: No hay tokens para restaurar la sesión.');
 
       authService.logout(); 
       router.navigate(['/login']);

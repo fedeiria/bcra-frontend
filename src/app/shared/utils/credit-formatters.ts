@@ -1,5 +1,5 @@
 import { CREDIT_SITUATUION_CONFIG } from '../../models/constants/credit-situation-config';
-import { REJECTED_CHECKS_CONFIG } from '../../models/constants/rejected-checks-config';
+import { REJECTED_CHECK_CONFIG } from '../../models/constants/rejected-check-config';
 import { ICheckStatusConfig } from '../../models/interfaces/icheck-status-config';
 
 /**
@@ -29,11 +29,11 @@ export function getSituationLabel(situation: number): string {
  */
 export function getCheckStatusConfig(cheque: any): ICheckStatusConfig {
     if (cheque.estadoMulta) {
-        return REJECTED_CHECKS_CONFIG[cheque.estadoMulta] || REJECTED_CHECKS_CONFIG['NO_APLICA'];
+        return REJECTED_CHECK_CONFIG[cheque.estadoMulta] || REJECTED_CHECK_CONFIG['NO_APLICA'];
     }
     if (cheque.fechaPago || cheque.fechaPagoMulta) {
-        return REJECTED_CHECKS_CONFIG['REGULARIZADO'];
+        return REJECTED_CHECK_CONFIG['REGULARIZADO'];
     }
     
-    return REJECTED_CHECKS_CONFIG['NO_APLICA'];
+    return REJECTED_CHECK_CONFIG['NO_APLICA'];
 }

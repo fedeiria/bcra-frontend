@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard } from './core/services/auth/auth-guard-guard';
+import { authGuard } from './core/guards/auth-guard';
 
 export const routes: Routes = [
   {
@@ -8,13 +8,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login').then(c => c.Login),
   },
   {
-    path: 'consultation',
-    loadComponent: () => import('./features/consultation/consultation').then(c => c.Consultation),
+    path: 'credit-report',
+    loadComponent: () => import('./features/credit-report/credit-report').then(c => c.CreditReport),
     canActivate: [authGuard]
   },
   {
-    path: 'checks',
-    loadComponent: () => import('./features/check/check-consultation').then(c => c.ChecksConsultation),
+    path: 'check-verification',
+    loadComponent: () => import('./features/check-verification/check-verification').then(c => c.CheckVerification),
     canActivate: [authGuard]
   },
   {

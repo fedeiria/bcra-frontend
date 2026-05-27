@@ -1,6 +1,6 @@
 import { ICheckStatusConfig } from '../interfaces/icheck-status-config';
 
-export const REJECTED_CHECKS_CONFIG: Record<string, ICheckStatusConfig> = {
+export const REJECTED_CHECK_CONFIG: Record<string, ICheckStatusConfig> = {
     'IMPAGA': { label: 'IMPAGA', class: 'badge-check status-critical' },
     'PAGA': { label: 'PAGA', class: 'badge-check status-success' },
     'EXIMIDA': { label: 'EXIMIDA', class: 'badge-check status-neutral' },

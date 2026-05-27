@@ -11,8 +11,6 @@ import { IUser } from '../../../models/interfaces/iuser';
 })
 export class AuthService {
 
-  private logoutTimer: any;
-
   private readonly API_URL = APP_CONFIG.api.authEndpoint;
   private readonly TOKEN_KEY = APP_CONFIG.session.tokenKey;
   private readonly REFRESH_TOKEN_KEY = APP_CONFIG.session.refreshTokenKey;
@@ -82,23 +80,6 @@ export class AuthService {
    */
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  /**
-   * Decode the JWT payload to extract user data.
-   * @returns any.
-   */
-  private decodeToken(token: string): any {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-
-      return JSON.parse(window.atob(base64));
-    }
-    catch (error) {
-      console.error('Error al decodificar el token', error);
-      return null;
-    }
   }
 
   /**

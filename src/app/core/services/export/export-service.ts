@@ -12,6 +12,8 @@ import { formatPeriod } from '../../../shared/utils/date-formatters';
 })
 export class ExportService {
 
+  private currentYear: number = new Date().getFullYear();
+
   /**
    * Exports the historical data to an Excel file with a structured format and basic styling. The file will be named "Historial_Credito_{CUIT}.xlsx".
    * If there is no historical data, the function will simply return without doing anything.
@@ -23,7 +25,7 @@ export class ExportService {
 
     // 1. Create a new workbook and add a worksheet for the credit history data.
     const workbook = new Workbook();
-    const worksheet = workbook.addWorksheet('Historial Crediticio');
+    const worksheet = workbook.addWorksheet('Reporte Crediticio');
 
     // Ensure gridlines are visible for better readability (Excel default is to show them, but this explicitly sets it in case the library defaults change)
     worksheet.views = [{ showGridLines: true }];
@@ -34,16 +36,7 @@ export class ExportService {
     const grayZebra = 'FFF8F9FA';
     const borderGray = 'FFDEE2E6';
 
-    // 3. Add Institutional Header (Titles and Client Info)
-    const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'REPORTE HISTÓRICO DE SITUACIÓN CREDITICIA';
-    titleCell.font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: institutionalBlue } };
-
-    const subtitleCell = worksheet.getCell('A2');
-    subtitleCell.value = 'Consulta consolidada desde la Central de Deudores (BCRA)';
-    subtitleCell.font = { name: 'Segoe UI', size: 11, italic: true, color: { argb: 'FF555555' } };
-
-    // 4. Block of Information for the Taxpayer
+    // 3. Block of Information for the Taxpayer
     const metadata = [
       { label: 'Razón Social / Denominación:', value: clientName || 'N/A' },
       { label: 'CUIT:', value: cuit || 'N/A' },
@@ -51,7 +44,7 @@ export class ExportService {
     ];
 
     metadata.forEach((item, index) => {
-      const rowNum = 4 + index;
+      const rowNum = 1 + index;
       const labelCell = worksheet.getCell(`A${rowNum}`);
       const valueCell = worksheet.getCell(`B${rowNum}`);
 
@@ -63,15 +56,7 @@ export class ExportService {
     });
 
     // 5. Add Table Headers with Styling
-    const startRow = 8;
-
-    // Styles for the header row
-    worksheet.columns = [
-      { header: 'Período', key: 'periodo', width: 15 },
-      { header: 'Deuda Total (ARS)', key: 'deuda', width: 24 },
-      { header: 'Situación BCRA', key: 'situacion', width: 18 },
-      { header: 'Estado', key: 'estado', width: 25 }
-    ];
+    const startRow = 5;
 
     // Move the header row to the desired starting row and apply styles
     const headerRow = worksheet.getRow(startRow);
@@ -162,7 +147,22 @@ export class ExportService {
       }
     }
 
-    // 8. Create a binary Excel file from the workbook and trigger a download in the browser with a dynamic filename that includes the client's CUIT
+    // 8. Add Disclaimer at the end of the report
+    const disclaimerRowStart = chartImageBase64 ? nextAvailableRow + 15 : startRow + data.length + 3;
+    
+    const disclaimerCell = worksheet.getCell(`A${disclaimerRowStart}`);
+    disclaimerCell.value = 'AVISO LEGAL Y ORIGEN DE DATOS:';
+    disclaimerCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF666666' } };
+
+    const disclaimerTextCell = worksheet.getCell(`A${disclaimerRowStart + 1}`);
+    disclaimerTextCell.value = 'Este reporte es una visualización independiente de datos obtenidos a través de la API Pública del Banco Central de la República Argentina (BCRA). La información reflejada es suministrada por las entidades financieras y procesada por el BCRA. Esta plataforma no modifica ni garantiza la exactitud de los datos de origen.';
+    disclaimerTextCell.font = { name: 'Segoe UI', size: 8, italic: true, color: { argb: 'FF888888' } };
+    
+    // Merge cells so that the text is legible across the width of the report
+    worksheet.mergeCells(`A${disclaimerRowStart + 1}:D${disclaimerRowStart + 2}`);
+    disclaimerTextCell.alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
+
+    // 9. Create a binary Excel file from the workbook and trigger a download in the browser with a dynamic filename that includes the client's CUIT
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
@@ -294,30 +294,112 @@ export class ExportService {
       }
     }
 
-    // Dynamic Footer with Page Numbers
-    const totalPages = doc.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(108, 117, 125); // grey color (#6c757d)
-
-      // Footer Line separator
-      doc.setDrawColor(230, 233, 237);
-      doc.line(14, 284, 196, 284);
-
-      // Left text (Confidentiality notice)
-      doc.text('Sistema Interno de Consulta Crediticia - Confidencial', 14, 289);
-
-      // Right text (Total pages updated safely)
-      const pageText = `Página ${i} de ${totalPages}`;
-      doc.text(pageText, 196, 289, { align: 'right' });
-    }
-
-    // Download the PDF file
+    this.addFooter(doc);
     doc.save(`Reporte_Crediticio_${cuit || 'Cliente'}.pdf`);
   }
+
+  /**
+   * Export the report of a reported check to PDF.
+   * @param details List of grounds for the complaint.
+   * @param bankName Name of the banking entity.
+   * @param bankCode Bank code.
+   * @param checkNumber Check number inquired.
+   */
+  exportToPdfCheck(details: any[], bankName: string, bankCode: string, checkNumber: string): void {
+    const doc = new jsPDF();
+    const date = new Date().toLocaleDateString('es-AR');
+
+    // 1. Header
+    doc.setFillColor(10, 58, 96); // #0a3a60
+    doc.rect(0, 0, 210, 40, 'F');
+
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.text('REPORTE DE CHEQUE DENUNCIADO', 14, 25);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Fecha de consulta: ${date}`, 14, 33);
+
+    // 2. Bank and check information
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Detalles de la Consulta:', 14, 50);
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Banco: ${bankName} (${bankCode})`, 14, 57);
+    doc.text(`Número de Cheque: ${checkNumber}`, 14, 63);
+
+    // 3. 'Causales' table
+    const tableData = details.map(d => [
+      `#${d.sucursal}`,
+      d.numeroCuenta,
+      d.causal
+    ]);
+
+    autoTable(doc, {
+      startY: 72,
+      head: [['Sucursal', 'Número de Cuenta', 'Motivo de la Denuncia']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [220, 53, 69], // Red
+        textColor: 255,
+        halign: 'center', // Header align
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { halign: 'left' },   // 'Sucursal' with left direction
+        1: { halign: 'center' }, // 'Cuenta' with center direction
+        2: { halign: 'right' }  // 'Motivo' with right direction
+      },
+      // Force the headers of each column to follow the same alignment as the content
+      didParseCell: (data) => {
+        if (data.section === 'head') {
+          if (data.column.index === 0) data.cell.styles.halign = 'left';
+          if (data.column.index === 1) data.cell.styles.halign = 'center';
+          if (data.column.index === 2) data.cell.styles.halign = 'right';
+        }
+      }
+    });
+
+    this.addFooter(doc);
+    doc.save(`Cheque_Denunciado_${checkNumber}.pdf`);
+  }
+
+  /**
+   * Add the footer with the Legal Disclaimer.
+   * @returns void.
+   */
+  private addFooter(doc: jsPDF): void {
+  const totalPages = (doc as any).internal.getNumberOfPages();
+  
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(108, 117, 125);
+
+    // 1. Legal Disclaimer
+    const disclaimer = 'Este reporte es una visualización independiente de datos obtenidos a través de la API Pública del Banco Central de la República Argentina (BCRA). La información reflejada es suministrada por las entidades financieras y procesada por el BCRA. Esta plataforma no modifica ni garantiza la exactitud de los datos de origen.';
+    const splitDisclaimer = doc.splitTextToSize(disclaimer, 182);
+    doc.text(splitDisclaimer, 14, 278);
+
+    // 2. Separator line
+    doc.setDrawColor(230, 233, 237);
+    doc.line(14, 284, 196, 284);
+
+    // 3. Left text (Copyright)
+    doc.setFontSize(8);
+    doc.text('Central de Deudores - Plataforma Integral Crediticia © ' + this.currentYear, 14, 289);
+
+    // 4. Right text (Pagination)
+    const pageText = `Página ${i} de ${totalPages}`;
+    doc.text(pageText, 196, 289, { align: 'right' });
+  }
+}
 
   /**
    * Renders the chart based on the provided historical data

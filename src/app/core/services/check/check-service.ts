@@ -9,7 +9,7 @@ import { IReportedCheck } from '../../../models/interfaces/ireportedcheck';
 @Injectable({
   providedIn: 'root'
 })
-export class ChecksService {
+export class CheckService {
 
   private readonly apiUrl = 'http://localhost:3000/checks';
 

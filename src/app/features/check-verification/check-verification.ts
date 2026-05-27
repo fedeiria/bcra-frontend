@@ -2,23 +2,27 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { ChecksService } from '../../core/services/checks/checks-service';
+import { CheckService } from '../../core/services/check/check-service';
 import { IBankEntity } from '../../models/interfaces/ibank-entity';
 import { IReportedCheck } from '../../models/interfaces/ireportedcheck';
 
 import { Header } from "../../shared/components/header/header";
+import { ExportService } from '../../core/services/export/export-service';
 
 @Component({
-  selector: 'app-check-consultation',
+  selector: 'app-check-verification',
   standalone: true,
   imports: [CommonModule, FormsModule, Header],
-  templateUrl: './check-consultation.html',
-  styleUrl: './check-consultation.scss',
+  templateUrl: './check-verification.html',
+  styleUrl: './check-verification.scss',
 })
-export class ChecksConsultation implements OnInit {
+export class CheckVerification implements OnInit {
   // Form
   selectedBankCode: string = '';
   checkNumber: string = '';
+
+  // Value to add in PDF
+  lastQueriedNumber: string = '';
   
   // Data and states
   banks: IBankEntity[] = [];
@@ -28,7 +32,7 @@ export class ChecksConsultation implements OnInit {
   loadingQuery: boolean = false;
   errorMessage: string | null = null;
 
-  constructor(private checksService: ChecksService) {}
+  constructor(private checkService: CheckService, private exportService: ExportService) {}
 
   ngOnInit(): void {
     this.loadBankingEntities();
@@ -40,7 +44,7 @@ export class ChecksConsultation implements OnInit {
    */
   private loadBankingEntities(): void {
     this.loadingBanks = true;
-    this.checksService.getBankingEntities().subscribe({
+    this.checkService.getBankingEntities().subscribe({
       next: (res) => {
         if (!res.error && res.data) {
           this.banks = res.data;
@@ -72,10 +76,11 @@ export class ChecksConsultation implements OnInit {
     this.errorMessage = null;
     this.result = null;
 
-    this.checksService.searchCheck(this.selectedBankCode, this.checkNumber).subscribe({
+    this.checkService.searchCheck(this.selectedBankCode, this.checkNumber).subscribe({
       next: (res) => {
         if (!res.error && res.data) {
           this.result = res.data;
+          this.lastQueriedNumber = this.checkNumber;
           this.checkNumber = '';
         }
         else {
@@ -88,6 +93,24 @@ export class ChecksConsultation implements OnInit {
         this.loadingQuery = false;
       }
     });
+  }
+
+  /**
+   * Export data to PDF.
+   * @returns void.
+   */
+  exportToPdf(): void {
+    if (!this.result) return;
+
+    const bank = this.banks.find(b => b.codigoEntidad == this.selectedBankCode);
+    const bankName = bank ? bank.denominacion : 'Entidad no identificada';
+    
+    this.exportService.exportToPdfCheck(
+      this.result.results.detalles,
+      bankName,
+      this.selectedBankCode,
+      this.lastQueriedNumber
+    );
   }
 
   /**

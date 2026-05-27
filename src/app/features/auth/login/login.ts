@@ -21,8 +21,9 @@ export class Login {
     password: ['', [Validators.required, Validators.minLength(6)]]
   });
 
-  isLoading = false;
-  errorMessage = '';
+  isLoading: boolean = false;
+  errorMessage: string = '';
+  currentYear: number = new Date().getFullYear();
 
   /**
    * Check the credentials login.
@@ -38,7 +39,7 @@ export class Login {
       this.authService.login(email, password).subscribe({
       next: (response) => {
         if (!response.error && response.data?.accessToken) {
-          this.router.navigate(['/consultation']).then(() => {
+          this.router.navigate(['/credit-report']).then(() => {
              this.isLoading = false;
           });
         }

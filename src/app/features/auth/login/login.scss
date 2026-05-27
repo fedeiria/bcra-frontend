@@ -32,7 +32,6 @@ $white: #ffffff;
     text-align: center;
     margin-bottom: 2.5rem;
 
-    // Contenedor flexible para apilar CENTRAL arriba y de DEUDORES abajo
     .brand-logo {
         display: flex;
         flex-direction: column;
@@ -65,7 +64,7 @@ $white: #ffffff;
         }
     }
 
-    // Subtiitle under the logo 
+    // Subtitle under the logo 
     p {
         color: #8a99a8;
         margin-top: 0.2rem;
@@ -102,10 +101,42 @@ $white: #ffffff;
             box-shadow: 0 0 0 0.25rem rgba(10, 58, 96, 0.15);
         }
 
+        &:focus-within label {
+            color: #f59f00;
+            transition: color 0.3s ease;
+        }
+
+        .form-group:focus-within {
+            i {
+                color: #f59f00;
+            }
+            label {
+                color: #f59f00;
+            }
+        }
+
         &.is-invalid {
             border-color: #fa5252;
             background-color: #fff5f5;
         }
+    }
+}
+
+.input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    i {
+        position: absolute;
+        left: 1rem;
+        color: #8a99a8;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+    }
+
+    .form-control-custom {
+        padding-left: 2.8rem;
     }
 }
 
@@ -147,11 +178,34 @@ $white: #ffffff;
 }
 
 .login-footer {
-    margin-top: 2.5rem;
+    margin-top: 1.5rem;
     text-align: center;
-    color: #8a99a8;
-    font-size: 0.8rem;
-    font-weight: 500;
+
+    .disclaimer-text {
+        font-size: 0.75rem;
+        color: #6c757d;
+        line-height: 1.4;
+        padding: 1rem 10px 0;
+        border-top: 1px solid #eee;
+        margin-bottom: 1rem;
+    }
+
+    .footer-info {
+        .system-text {
+            color: #8a99a8;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .copyright {
+            font-size: 0.7rem;
+            color: #adb5bd;
+            font-weight: 500;
+            margin-bottom: -0.5rem;
+        }
+    }
 }
 
 /* Loader */

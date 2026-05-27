@@ -14,9 +14,11 @@
 
                 <div class="row align-items-start g-3">
                     <div class="col-md-8 col-lg-6">
-                        <input type="text" class="form-control form-control-custom" [(ngModel)]="cuit"
-                            (input)="onCuitInput($event)" inputmode="numeric" placeholder="Ej: 20123456789"
+                        <input type="text" class="form-control form-control-custom" inputmode="numeric" placeholder="Ej: 20123456789" maxlength="59"
+                            [(ngModel)]="cuit"
+                            (input)="onCuitInput($event)"
                             [class.is-invalid]="cuit && !isValidCuit()" />
+
                         @if (cuit && !isValidCuit()) {
                             <div class="invalid-feedback d-block mt-2 font-monospace small" role="alert">
                                 ⚠️ El CUIT debe contener exactamente 11 dígitos numéricos por cada entrada.
@@ -76,7 +78,8 @@
                     <span class="badge bg-dark fs-6 font-monospace px-3 py-2">CUIT: {{ result.cuit }}</span>
                 </div>
             </div>
-            <ng-container *ngTemplateOutlet="detailedInfo; context: {$implicit: result, history: historicalData}"></ng-container>
+
+            <ng-container *ngTemplateOutlet="detailedInfo; context: { $implicit: result, itemRef: { historicalData: historicalData, loadingHistory: false } }"></ng-container>
         }
 
         @if (isBatchMode && resultsArray.length > 0) {
@@ -142,7 +145,22 @@
         }
 
     </div>
-</div>
+
+    <footer class="footer-disclaimer">
+        <div class="footer-content">
+            <div class="footer-title">
+                <i class="bi bi-bank"></i>
+                <span>FUENTE DE DATOS: CENTRAL DE DEUDORES - BCRA</span>
+            </div>
+            <p class="footer-text">
+                La información visualizada en esta sección es provista por la API Pública del Banco Central de la República Argentina (Central de Deudores v1.0).<br> 
+                Los datos de situación crediticia y cheques rechazados son suministrados por las entidades financieras y procesados por el BCRA.<br>
+                Esta plataforma actúa únicamente como un visor técnico independiente y no tiene injerencia en la calificación informada.
+            </p>
+        </div>
+    </footer>
+
+</div> 
 
 <ng-template #detailedInfo let-summary let-item="itemRef">
     <div class="mb-4">

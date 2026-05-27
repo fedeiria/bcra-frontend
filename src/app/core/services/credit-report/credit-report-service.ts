@@ -9,7 +9,7 @@ import { IHistoricalItem } from '../../../models/interfaces/ihistorical-item';
 @Injectable({
   providedIn: 'root',
 })
-export class ConsultationService {
+export class CreditReportService {
 
   // Listen on localhost:3000, which is where the backend server is running.
   private readonly apiUrl = 'http://localhost:3000/debts';

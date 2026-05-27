@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 
-import { AuthService } from './auth-service';
+import { AuthService } from '../services/auth/auth-service';
 
 let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
