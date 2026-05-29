@@ -256,7 +256,7 @@ export class ExportService {
         },
         1: {
           cellWidth: 55,
-          halign: 'right' // Alinea el contenido del body
+          halign: 'right'
         },
         2: {
           cellWidth: 'auto',
@@ -393,7 +393,7 @@ export class ExportService {
 
     // 3. Left text (Copyright)
     doc.setFontSize(8);
-    doc.text('Central de Deudores - Plataforma Integral Crediticia © ' + this.currentYear, 14, 289);
+    doc.text('BCRA Consultas - Plataforma Integral Crediticia © ' + this.currentYear, 14, 289);
 
     // 4. Right text (Pagination)
     const pageText = `Página ${i} de ${totalPages}`;
