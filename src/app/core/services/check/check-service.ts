@@ -6,12 +6,14 @@ import { IApiResponse } from '../../../models/interfaces/iapi-response';
 import { IBankEntity } from '../../../models/interfaces/ibank-entity';
 import { IReportedCheck } from '../../../models/interfaces/ireportedcheck';
 
+import { APP_CONFIG } from '../../../models/constants/app-config';
+
 @Injectable({
   providedIn: 'root'
 })
 export class CheckService {
 
-  private readonly apiUrl = 'http://localhost:3000/checks';
+  private readonly apiUrl = `${APP_CONFIG.api.baseUrl}/checks`;
 
   constructor(private http: HttpClient) { }
 

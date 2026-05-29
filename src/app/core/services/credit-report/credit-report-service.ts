@@ -6,13 +6,14 @@ import { IApiResponse } from '../../../models/interfaces/iapi-response';
 import { ICreditSummary } from '../../../models/interfaces/icredit-summary';
 import { IHistoricalItem } from '../../../models/interfaces/ihistorical-item';
 
+import { APP_CONFIG } from '../../../models/constants/app-config';
+
 @Injectable({
   providedIn: 'root',
 })
 export class CreditReportService {
 
-  // Listen on localhost:3000, which is where the backend server is running.
-  private readonly apiUrl = 'http://localhost:3000/debts';
+  private readonly apiUrl = `${APP_CONFIG.api.baseUrl}/debts`;
 
   constructor(private readonly http: HttpClient) {}
 

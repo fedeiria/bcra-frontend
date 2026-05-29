@@ -1,7 +1,9 @@
+import { environment } from "../../../environments/environment";
+
 export const APP_CONFIG = {
     api: {
-        baseUrl: 'http://localhost:3000',
-        authEndpoint: 'http://localhost:3000/auth',
+        baseUrl: environment.apiUrl,
+        authEndpoint: `${environment.apiUrl}/auth`,
     },
     session: {
         tokenKey: 'token',
