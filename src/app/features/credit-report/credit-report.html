@@ -145,21 +145,6 @@
         }
 
     </div>
-
-    <footer class="footer-disclaimer">
-        <div class="footer-content">
-            <div class="footer-title">
-                <i class="bi bi-bank"></i>
-                <span>FUENTE DE DATOS: CENTRAL DE DEUDORES - BCRA</span>
-            </div>
-            <p class="footer-text">
-                La información visualizada en esta sección es provista por la API Pública del Banco Central de la República Argentina (Central de Deudores v1.0).<br> 
-                Los datos de situación crediticia y cheques rechazados son suministrados por las entidades financieras y procesados por el BCRA.<br>
-                Esta plataforma actúa únicamente como un visor técnico independiente y no tiene injerencia en la calificación informada.
-            </p>
-        </div>
-    </footer>
-
 </div> 
 
 <ng-template #detailedInfo let-summary let-item="itemRef">
@@ -204,3 +189,5 @@
         <app-entity-details [details]="summary.entidadesDetalle"></app-entity-details>
     </div>
 </ng-template>
+
+<app-footer></app-footer>

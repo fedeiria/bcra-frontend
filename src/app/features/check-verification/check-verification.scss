@@ -10,8 +10,14 @@ $primary-bank: #0a3a60;
 
 .page-wrapper {
     background-color: #f4f6f9;
-    min-height: calc(100vh - 80px); 
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
     width: 100%;
+}
+
+.page-content {
+    flex: 1 0 auto;
 }
 
 .py-5 {

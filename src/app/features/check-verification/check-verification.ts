@@ -7,12 +7,13 @@ import { IBankEntity } from '../../models/interfaces/ibank-entity';
 import { IReportedCheck } from '../../models/interfaces/ireportedcheck';
 
 import { Header } from "../../shared/components/header/header";
+import { Footer } from '../../shared/components/footer/footer';
 import { ExportService } from '../../core/services/export/export-service';
 
 @Component({
   selector: 'app-check-verification',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header],
+  imports: [CommonModule, FormsModule, Header, Footer],
   templateUrl: './check-verification.html',
   styleUrl: './check-verification.scss',
 })

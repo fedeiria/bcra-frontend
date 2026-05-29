@@ -6,6 +6,7 @@ import { forkJoin, firstValueFrom } from 'rxjs';
 import { CreditReportService } from '../../core/services/credit-report/credit-report-service';
 import { Spinner } from "../../shared/components/spinner/spinner";
 import { Header } from "../../shared/components/header/header";
+import { Footer } from '../../shared/components/footer/footer';
 import { HistoryChart } from './components/history-chart/history-chart';
 import { MetricCards } from './components/metric-cards/metric-cards';
 import { RejectedChecks } from './components/rejected-checks/rejected-checks';
@@ -21,7 +22,7 @@ import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-
 @Component({
   selector: 'app-credit-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, Spinner, Header, HistoryChart, MetricCards, RejectedChecks, EntityDetails],
+  imports: [CommonModule, FormsModule, Spinner, Header, Footer, HistoryChart, MetricCards, RejectedChecks, EntityDetails],
   templateUrl: './credit-report.html',
   styleUrl: './credit-report.scss',
 })
