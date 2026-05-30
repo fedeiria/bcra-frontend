@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { forkJoin, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 import { CreditReportService } from '../../core/services/credit-report/credit-report-service';
 import { Spinner } from "../../shared/components/spinner/spinner";
@@ -14,7 +14,6 @@ import { EntityDetails } from './components/entity-details/entity-details';
 
 import { ICreditSummary } from '../../models/interfaces/icredit-summary';
 import { IHistoricalItem } from '../../models/interfaces/ihistorical-item';
-import { IApiResponse } from '../../models/interfaces/iapi-response';
 import { IBatchItem } from '../../models/interfaces/ibatch-item';
 
 import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-formatters';
@@ -74,69 +73,92 @@ export class CreditReport {
   /**
    * Performs a simple query of the CUIT entered by the user.
    * @param cuit The CUIT entered by the user.
-   * @returns void.
+   * @returns Promise<void>.
    */
-  private executeSingleConsult(cuit: string): void {
+  private async executeSingleConsult(cuit: string): Promise<void> {
     this.result = null;
     this.historicalData = [];
 
-    forkJoin({
-      summary: this.creditReportService.getCreditSummary(cuit),
-      history: this.creditReportService.getHistoricalEvolution(cuit)
-    }).subscribe({
-      next: (response) => {
-        if (response.summary.error) {
-          this.errorMessage = response.summary.message ?? 'Error desconocido';
-          this.errorType = response.summary.type as 'warning' | 'danger';
-        }
-        else {
-          this.result = response.summary.data ?? null;
-          this.historicalData = response.history.data ?? [];
-          this.cuit = '';
-        }
+    try {
+      const [summaryRes, historyRes] = await Promise.all([
+        firstValueFrom(this.creditReportService.getCreditSummary(cuit)),
+        firstValueFrom(this.creditReportService.getHistoricalEvolution(cuit))
+      ]);
 
-        this.loading = false;
-      },
-      error: () => this.handleConnectionError()
-    });
+      if (summaryRes.error) {
+        this.errorMessage = summaryRes.message ?? 'Error desconocido';
+        this.errorType = summaryRes.type as 'warning' | 'danger';
+        return; 
+      }
+
+      this.result = summaryRes.data ?? null;
+      let history: IHistoricalItem[] = historyRes.data ?? [];
+
+      if (this.result) {
+        const currentPeriod = this.result.periodo;
+        const alreadyExists = history.some((h: IHistoricalItem) => h.periodo === currentPeriod);
+
+        if (!alreadyExists) {
+          history.push({
+            periodo: currentPeriod,
+            deudaTotal: this.result?.deudaTotal ?? 0,
+            situacion: this.result?.situacion ?? 1,
+            isCurrent: true
+          });
+        }
+        history.sort((a, b) => Number(b.periodo) - Number(a.periodo));
+      }
+
+      this.historicalData = history;
+      this.cuit = '';
+    }
+    catch (error) {
+      this.handleConnectionError();
+      
+    }
+    finally {
+      this.loading = false;
+    }
   }
 
   /**
    * Execute a batch of CUITs.
    * @param cuits The batch of CUITs.
-   * @returns void.
+   * @returns Promise<void>.
    */
-  private executeBatchConsult(cuits: string[]): void {
+  private async executeBatchConsult(cuits: string[]): Promise<void> {
     this.resultsArray = [];
-    this.loading = true;
 
-    this.creditReportService.getBatchCreditSummary(cuits).subscribe({
-      next: (responses: IApiResponse<ICreditSummary>[]) => {
+    try {
+      const responses = await firstValueFrom(this.creditReportService.getBatchCreditSummary(cuits));
 
-        this.resultsArray = responses.map((res, index) => ({
-          cuit: cuits[index],
-          denominacion: res.data?.denominacion,
-          success: !res.error,
-          data: res.data ?? null,
-          errorMessage: res.error ? (res.message || 'Error en la consulta') : null,
-          showDetail: false,
-          loadingHistory: false,
-          historicalData: []
-        }));
+      this.resultsArray = responses.map((res, index) => ({
+        cuit: cuits[index],
+        denominacion: res.data?.denominacion,
+        success: !res.error,
+        data: res.data ?? null,
+        errorMessage: res.error ? (res.message || 'Error en la consulta') : null,
+        showDetail: false,
+        loadingHistory: false,
+        historicalData: [],
+        historyError: null
+      }));
 
-        if (this.resultsArray.length > 0 && this.resultsArray.every(r => !r.success)) {
-          this.errorMessage = 'No se pudo obtener información de los CUITs solicitados. La conexión con el API del BCRA fue interrumpida.';
-          this.errorType = 'danger';
-        }
+      const allFailed = this.resultsArray.length > 0 && this.resultsArray.every(r => !r.success);
 
-        if (this.resultsArray.every(r => !r.success)) {
-          this.resultsArray = []; 
-        }
-
-        this.loading = false;
-      },
-      error: () => this.handleConnectionError()
-    });
+      if (allFailed) {
+        this.errorMessage = 'No se pudo obtener información de los CUITs solicitados. La conexión con el API del BCRA fue interrumpida.';
+        this.errorType = 'danger';
+        this.resultsArray = [];
+      }
+    }
+    catch (error) {
+      this.handleConnectionError();
+      
+    }
+    finally {
+      this.loading = false;
+    }
   }
 
   /**
@@ -144,30 +166,46 @@ export class CreditReport {
    * @param item The item of the Batch.
    * @returns Promise<void> 
    */
-  async toggleDetail(item: IBatchItem): Promise<void> {
+  async toggleDetail(item: any): Promise<void> {
     item.showDetail = !item.showDetail;
-    
-    if (item.showDetail && (!item.historicalData || item.historicalData.length === 0)) {
-      item.loadingHistory = true;
-      
-      try {
-        const response = await firstValueFrom(this.creditReportService.getHistoricalEvolution(item.cuit));
-        
-        if (response && !response.error) {
-          item.historicalData = [...(response.data ?? [])];
+
+    if (!item.showDetail || item.historicalData.length > 0 || item.loadingHistory) {
+      return;
+    }
+
+    item.loadingHistory = true;
+    item.historyError = null;
+
+    try {
+      const response = await firstValueFrom(this.creditReportService.getHistoricalEvolution(item.cuit));
+
+      let history: IHistoricalItem[] = response.data ?? [];
+
+      if (item.data) {
+        const currentPeriod = item.data.periodo;
+        const alreadyExists = history.some((h: IHistoricalItem) => h.periodo === currentPeriod);
+
+        if (!alreadyExists) {
+          history.push({
+            periodo: currentPeriod,
+            deudaTotal: item.data.deudaTotal ?? 0,
+            situacion: item.data.situacion ?? 1,
+            isCurrent: true
+          });
         }
-        else {
-          item.historicalData = [];
-        }
+        history.sort((a, b) => Number(b.periodo) - Number(a.periodo));
       }
-      catch {
-        item.historicalData = [];
-      }
-      finally {
-        setTimeout(() => {
-          item.loadingHistory = false;
-        }, 50);
-      }
+
+      item.historicalData = history;
+    }
+    catch (error) {
+      console.error(`Error obteniendo historial para ${item.cuit}:`, error);
+
+      item.historicalData = [];
+      item.historyError = 'No se pudo cargar el historial en este momento.';
+    }
+    finally {
+      item.loadingHistory = false;
     }
   }
 
