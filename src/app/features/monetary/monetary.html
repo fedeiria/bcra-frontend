@@ -1,0 +1,133 @@
+<app-header></app-header>
+
+<div class="page-wrapper">
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold text-primary-dark">Variables Monetarias</h2>
+                <p class="text-muted">Indicadores principales publicados por el BCRA</p>
+            </div>
+        </div>
+
+        @if (loading) {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary-dark" role="status"></div>
+                <p class="mt-3 text-muted">Obteniendo catálogo del BCRA...</p>
+            </div>
+        } @else {
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border-0 h-100">
+
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                            <h5 class="fw-semibold mb-0">Catálogo de Variables</h5>
+                            
+                            <div class="input-group" style="max-width: 250px;">
+                                <span class="input-group-text bg-white border-end-0 px-3 d-flex align-items-center">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Buscar indicador..." 
+                                    [(ngModel)]="searchTerm" 
+                                    (input)="filterVariables()">
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0 custom-scroll" style="max-height: 600px; overflow-y: auto;">
+                            <div class="list-group list-group-flush">
+
+                                @for (variable of filteredVariables; track variable.idVariable) {
+                                    <button type="button" class="list-group-item list-group-item-action p-3"
+                                            [class.active-variable]="selectedVariable?.idVariable === variable.idVariable"
+                                            (click)="viewHistory(variable)">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="icon-circle shadow-sm" [ngClass]="getColorFor(variable.idVariable)">
+                                                <i class="bi fs-5" [ngClass]="getIconFor(variable.idVariable)"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-semibold">{{ variable.descripcion }}</h6>
+                                                <small class="text-muted">Último valor: {{ variable.ultValorInformado | number:'1.2-2' }}</small>
+                                            </div>
+                                            <i class="bi bi-chevron-right text-black-50"></i>
+                                        </div>
+                                    </button>
+                                }
+
+                                @if (filteredVariables.length === 0) {
+                                    <div class="text-center p-4 text-muted">
+                                        <i class="bi bi-search mb-2 d-block fs-4 opacity-50"></i>
+                                        <small>No se encontraron variables con "{{ searchTerm }}"</small>
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+
+                    @if (selectedVariable) {
+
+                        <div class="card shadow-sm border-0 mb-4 fade-in">
+                            <div class="card-body p-4">
+                                <h4 class="fw-bold text-primary-dark mb-3">{{ selectedVariable.descripcion }}</h4>
+                                
+                                <div class="p-3 bg-light rounded-3 mb-4 border border-white-10">
+                                    <p class="mb-0 text-muted small">
+                                        <i class="bi bi-info-circle me-2"></i>{{ selectedVariable.metodologia }}
+                                    </p>
+                                </div>
+
+                                <h5 class="fw-semibold mb-3">Historial (Último mes)</h5>
+                                
+                                @if (loadingHistory) {
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    </div>
+                                }
+                                @else {
+                                    <div class="table-responsive">
+                                        <table class="table table-custom">
+                                            <thead>
+                                                <tr>
+                                                    <th>Fecha</th>
+                                                    <th class="text-end">Valor Registrado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (registro of historyData; track registro.fecha) {
+                                                    <tr>
+                                                        <td>{{ registro.fecha | date:'dd/MM/yyyy' }}</td>
+                                                        <td class="text-end fw-medium">{{ registro.valor | number:'1.2-2' }}</td>
+                                                    </tr>
+                                                }
+                                                @if (historyData.length === 0) {
+                                                    <tr>
+                                                        <td colspan="2" class="text-center text-muted py-4">No hay datos para este período.</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @else {
+                        <div class="card shadow-sm border-0 h-100 d-flex align-items-center justify-content-center bg-transparent border-dashed">
+                            <div class="text-center p-5 text-muted">
+                                <i class="bi bi-bar-chart d-block fs-1 mb-3 opacity-50"></i>
+                                <h5>Seleccioná una variable</h5>
+                                <p class="small">Hacé clic en cualquier indicador del listado para ver su metodología y evolución histórica.</p>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+<app-footer></app-footer>

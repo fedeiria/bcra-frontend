@@ -1,43 +1,3 @@
-<!-- <nav class="navbar navbar-expand-lg app-header px-4">
-    <div class="container-fluid p-0 position-relative">
-
-        <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            <div class="header-logo-container">
-                <img src="images/brand_logo.png" alt="BCRA Consultas Logo" class="header-brand-logo">
-            </div>
-            
-            <div class="d-flex flex-column">
-                <span class="app-title">BCRA Consultas</span>
-                <span class="app-subtitle text-white-50">Plataforma Integral Crediticia</span>
-            </div>
-        </div>
-
-        <button class="navbar-toggler border-0 text-white p-0" type="button" 
-                data-bs-toggle="collapse" data-bs-target="#headerNav"
-                aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
-            <i class="bi bi-list fs-1"></i>
-        </button>
-
-        <div class="collapse navbar-collapse" id="headerNav">
-            <div class="navbar-nav gap-2 gap-lg-4 py-3 py-lg-0 text-center text-lg-start absolute-center-lg">
-                <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="nav-item-link">
-                    <i class="bi bi-person-badge me-2"></i>Deudores
-                </a>
-                <a routerLink="/check-verification" routerLinkActive="active-link" class="nav-item-link">
-                    <i class="bi bi-check2-square me-2"></i>Cheques
-                </a>
-            </div>
-
-            <div class="ms-auto d-none d-lg-flex align-items-center">
-                <span class="user-role">
-                    <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>
-                    Acceso Público
-                </span>
-            </div>
-        </div>
-    </div>
-</nav> -->
-
 <nav class="navbar navbar-expand-lg app-header px-4">
     <div class="container-fluid p-0 position-relative">
 
@@ -45,28 +5,31 @@
             <div class="header-logo-container">
                 <img src="images/brand_logo.png" alt="BCRA Consultas Logo" class="header-brand-logo">
             </div>
-            
+
             <div class="d-flex flex-column">
                 <span class="app-title">BCRA Consultas</span>
                 <span class="app-subtitle text-white-50">Plataforma Integral Crediticia</span>
             </div>
         </div>
 
-        <button class="navbar-toggler border-0 text-white p-0" type="button" 
-                (click)="toggleMenu()"
-                [attr.aria-expanded]="isMenuOpen" aria-label="Toggle navigation">
+        <button class="navbar-toggler border-0 text-white p-0" type="button" (click)="toggleMenu()"
+            [attr.aria-expanded]="isMenuOpen" aria-label="Toggle navigation">
             <i class="bi bi-list fs-1"></i>
         </button>
 
         <div class="collapse navbar-collapse" id="headerNav" [class.show]="isMenuOpen">
             <div class="navbar-nav gap-2 gap-lg-4 py-3 py-lg-0 text-center text-lg-start absolute-center-lg">
-                <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" 
-                   class="nav-item-link" (click)="closeMenu()">
+                <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+                    class="nav-item-link" (click)="closeMenu()">
                     <i class="bi bi-person-badge me-2"></i>Deudores
                 </a>
-                <a routerLink="/check-verification" routerLinkActive="active-link" 
-                   class="nav-item-link" (click)="closeMenu()">
+                <a routerLink="/check-verification" routerLinkActive="active-link" class="nav-item-link"
+                    (click)="closeMenu()">
                     <i class="bi bi-check2-square me-2"></i>Cheques
+                </a>
+                <a routerLink="/monetary" routerLinkActive="active-link" class="nav-item-link"
+                    (click)="closeMenu()">
+                    <i class="bi bi-graph-up me-2"></i>Variables
                 </a>
             </div>
 

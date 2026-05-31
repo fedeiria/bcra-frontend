@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/check-verification/check-verification').then(c => c.CheckVerification),
   },
   {
+    path: 'monetary',
+    loadComponent: () => import('./features/monetary/monetary').then(c => c.Monetary),
+  },
+  {
     path: '**',
     redirectTo: ''
   }
