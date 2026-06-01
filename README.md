@@ -1,59 +1,63 @@
-# BcraFrontend
+# BCRA Dashboard - Frontend 📈
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.0.
+Interfaz moderna y reactiva desarrollada en **Angular 19** para la visualización de indicadores financieros del Banco Central de la República Argentina (BCRA).
 
-## Development server
+---
 
-To start a local development server, run:
+## 🚀 Características
+
+* **🌐 Visualización en Tiempo Real**: Consulta de variables monetarias y estadísticas cambiarias de forma directa.
+* **📊 Historiales Detallados**: Tablas interactivas con la evolución histórica de divisas y tasas.
+* **🎨 Diseño Profesional**: Interfaz construida con **Bootstrap 5**, optimizada para la lectura de datos financieros complejos.
+* **⚠️ Feedback al Usuario**: Manejo de errores intuitivo mediante alertas dinámicas (Animate.css) y estados de carga (Spinners).
+* **🏗️ Arquitectura Limpia**: Uso de componentes *Standalone* y servicios modulares altamente escalables.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+| Herramienta | Uso |
+| :--- | :--- |
+| **Angular 20** | Framework de desarrollo principal. |
+| **Bootstrap 5** | Estilos, grillas y maquetación responsiva. |
+| **Bootstrap Icons** | Librería de iconos vectoriales. |
+| **Animate.css** | Animaciones para componentes de alerta. |
+
+---
+
+## ⚙️ Configuración del Entorno
+
+La aplicación consume un middleware propio construido en **NestJS**. Para una comunicación correcta, configurá los archivos de entorno:
+
+### 🌍 Producción (`src/environments/environment.prod.ts`)
+```typescript
+export const environment = {
+  production: true,
+  apiUrl: 'https://central-deudores-backend.onrender.com/api'
+};
+
+### Desarrollo (`src/environments/environment.ts`)
+
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3000/api'
+};
+
+## 📦 Instalación y Uso
+
+Clonar el repositorio:
 
 ```bash
+git clone https://github.com/fedeiria/bcra-frontend.git
+
+Instalar dependencias:
+
+2. **Instalar dependencias:**
+   ```bash
+npm install
+
+3. **Ejecutar en desarrollo:**
+   ```bash
 ng serve
-```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+🚀 Navegá a http://localhost:4200/
