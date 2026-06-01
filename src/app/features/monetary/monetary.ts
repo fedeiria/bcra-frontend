@@ -20,13 +20,16 @@ import { Footer } from '../../shared/components/footer/footer';
 export class Monetary implements OnInit {
   private monetaryService = inject(MonetaryService);
 
-  variables: IMonetaryVariable[] = [];
+  loading: boolean = true;
+  loadingHistory: boolean = false;
+  alreadySearched: boolean = false;
+  errorMessage: string = '';
+
+  private variables: IMonetaryVariable[] = [];
   selectedVariable: IMonetaryVariable | null = null;
   historyData: IMonetaryHistoryItem[] = [];
 
-  loading = true;
-  loadingHistory = false;
-  uiConfig = MONETARY_UI_CONFIG;
+  private uiConfig = MONETARY_UI_CONFIG;
 
   // Search term for filtering variables
   searchTerm: string = '';
@@ -42,6 +45,7 @@ export class Monetary implements OnInit {
    */
   private async loadInitialData(): Promise<void> {
     this.loading = true;
+    this.errorMessage = '';
     
     try {
       const [variablesRes, methodologiesRes] = await Promise.all([
@@ -65,7 +69,7 @@ export class Monetary implements OnInit {
       }
     }
     catch (error) {
-      console.error('Error cargando datos del BCRA', error);
+      this.errorMessage = 'Error cargando datos del BCRA.';
     }
     finally {
       this.loading = false;
@@ -79,6 +83,7 @@ export class Monetary implements OnInit {
    */
   async viewHistory(variable: IMonetaryVariable): Promise<void> {
     this.selectedVariable = variable;
+    this.errorMessage = '';
     this.loadingHistory = true;
     
     const hoy = new Date();
@@ -99,7 +104,7 @@ export class Monetary implements OnInit {
       }
     }
     catch (error) {
-      console.error('Error cargando historial', error);
+      this.errorMessage = 'Error cargando historial.';
       this.historyData = [];
     }
     finally {

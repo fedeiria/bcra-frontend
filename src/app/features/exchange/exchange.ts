@@ -75,7 +75,7 @@ export class Exchange implements OnInit {
         this.alreadySearched = true;
       }
       else {
-        this.errorMessage = res.message || 'El BCRA no pudo procesar la consulta.';
+        this.errorMessage = res.message || 'Error al procesar la consulta.';
       }
     }
     catch (error) {

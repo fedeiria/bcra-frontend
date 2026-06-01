@@ -4,14 +4,15 @@ $primary-bank: #0a3a60;
 $accent-gold: #f59f00;
 
 :host {
-    display: block;
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
     background-color: #f4f6f9;
 }
 
 .page-wrapper {
+    flex: 1;
     background-color: #f4f6f9;
-    min-height: calc(100vh - 80px);
 }
 
 .text-primary-dark {
