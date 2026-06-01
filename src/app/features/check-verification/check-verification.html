@@ -41,14 +41,15 @@
                             </div>
 
                             <div class="col-12 mt-4">
-                                <button class="btn btn-primary-bank w-100 py-2 shadow-sm"
+                                <button class="btn btn-primary-bank w-100 py-2 shadow-sm d-flex justify-content-center align-items-center gap-2"
                                     [disabled]="!isFormValid || loadingQuery" (click)="consultReportedCheck()">
                                     @if (loadingQuery) {
                                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                         <span>Consultando...</span>
                                     }
                                     @else {
-                                        <i class="bi bi-search me-2"></i>Consultar Estado
+                                        <i class="bi bi-search"></i>
+                                        <span>Consultar estado</span>
                                     }
                                 </button>
                             </div>

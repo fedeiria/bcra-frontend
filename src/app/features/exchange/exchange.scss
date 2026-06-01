@@ -1,0 +1,108 @@
+@use "sass:color";
+
+$primary-bank: #004b93;
+
+.main-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 70px);
+    background-color: #f4f6f9;
+}
+
+.text-primary-bank {
+    color: $primary-bank;
+}
+
+.btn-primary-bank {
+    background-color: $primary-bank;
+    border-color: $primary-bank;
+    color: white;
+    font-weight: 600;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+        background-color: color.adjust($primary-bank, $lightness: 5%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+}
+
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+
+    .card-title {
+        letter-spacing: -0.5px;
+    }
+}
+
+.form-select,
+.form-control {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    border: 1px solid #dee2e6;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+        border-color: color.adjust($primary-bank, $lightness: 20%);
+        box-shadow: 0 0 0 0.25rem rgba($primary-bank, 0.1);
+    }
+}
+
+.table {
+    thead {
+        th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            border-bottom: 2px solid #f8f9fa;
+        }
+    }
+
+    tbody {
+        tr {
+            transition: background-color 0.2s;
+
+            &:hover {
+                background-color: rgba($primary-bank, 0.02);
+            }
+        }
+    }
+}
+
+.text-monospace {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+}
+
+// Entry animation for the component
+.animate__fadeIn {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.content-area {
+    flex: 1 0 auto;
+}
+
+app-footer {
+    flex-shrink: 0;
+}

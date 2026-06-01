@@ -14,8 +14,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/check-verification/check-verification').then(c => c.CheckVerification),
   },
   {
-    path: 'monetary',
+    path: 'monetary-variables',
     loadComponent: () => import('./features/monetary/monetary').then(c => c.Monetary),
+  },
+  {
+    path: 'exchange-stats',
+    loadComponent: () => import('./features/exchange/exchange').then(c => c.Exchange),
   },
   {
     path: '**',

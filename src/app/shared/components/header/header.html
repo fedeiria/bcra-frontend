@@ -21,15 +21,19 @@
             <div class="navbar-nav gap-2 gap-lg-4 py-3 py-lg-0 text-center text-lg-start absolute-center-lg">
                 <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
                     class="nav-item-link" (click)="closeMenu()">
-                    <i class="bi bi-person-badge me-2"></i>Deudores
+                    <i class="bi bi-person-badge me-2"></i>Situación Crediticia
                 </a>
                 <a routerLink="/check-verification" routerLinkActive="active-link" class="nav-item-link"
                     (click)="closeMenu()">
-                    <i class="bi bi-check2-square me-2"></i>Cheques
+                    <i class="bi bi-check2-square me-2"></i>Cheques Denunciados
                 </a>
-                <a routerLink="/monetary" routerLinkActive="active-link" class="nav-item-link"
+                <a routerLink="/monetary-variables" routerLinkActive="active-link" class="nav-item-link"
                     (click)="closeMenu()">
-                    <i class="bi bi-graph-up me-2"></i>Variables
+                    <i class="bi bi-graph-up me-2"></i>Variables Monetarias
+                </a>
+                <a routerLink="/exchange-stats" routerLinkActive="active-link" class="nav-item-link"
+                    (click)="closeMenu()">
+                    <i class="bi bi-currency-exchange me-2"></i>Estadísticas Cambiarias
                 </a>
             </div>
 

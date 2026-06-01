@@ -1,0 +1,111 @@
+<app-header></app-header>
+
+<div class="main-layout">
+
+    <div class="content-area container-fluid py-4">
+
+        @if (errorMessage) {
+            <div class="alert alert-danger shadow-sm border-0 d-flex align-items-center animate__animated animate__shakeX" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <div>{{ errorMessage }}</div>
+                <button type="button" class="btn-close ms-auto" (click)="errorMessage = ''" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Filter Cards -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-primary-bank fw-semibold mb-4">
+                    <i class="bi bi-graph-up-arrow me-2"></i>Estadísticas Cambiarias
+                </h5>
+
+                <form (ngSubmit)="checkCurrencyEvolution()" class="row g-3 align-items-end">
+                    <!-- Exchange Rate selector -->
+                    <div class="col-md-4">
+                        <label for="currency" class="form-label fw-semibold text-secondary">Divisa</label>
+                        <select id="currency" class="form-select" [(ngModel)]="selectedCurrency" name="selectedCurrency" required>
+                            <option value="" disabled selected>Seleccione una moneda...</option>
+
+                            @for (currency of currencies; track currency.codigo) {
+                                <option [value]="currency.codigo">{{ currency.codigo }} - {{ currency.denominacion }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Date from -->
+                    <div class="col-md-3">
+                        <label for="fromDate" class="form-label fw-semibold text-secondary">Fecha Desde</label>
+                        <input type="date" id="fromDate" class="form-control" [(ngModel)]="fromDate" name="fromDate">
+                    </div>
+
+                    <!-- Date To -->
+                    <div class="col-md-3">
+                        <label for="toDate" class="form-label fw-semibold text-secondary">Fecha Hasta</label>
+                        <input type="date" id="toDate" class="form-control" [(ngModel)]="toDate" name="toDate">
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="col-md-2">
+                        <button type="submit"
+                            class="btn btn-primary-bank w-100 py-2 shadow-sm d-flex justify-content-center align-items-center gap-2" [disabled]="loading || !selectedCurrency">
+                            @if (loading) {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Consultando...</span>
+                            }
+                            @else {
+                                <i class="bi bi-search"></i>
+                                <span>Consultar</span>
+                            }
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de Resultados -->
+        @if (evolutionData.length > 0) {
+
+            <div class="card shadow-sm border-0 animate__animated animate__fadeIn">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4 py-3">Fecha</th>
+                                    <th class="py-3">Código ISO</th>
+                                    <th class="py-3">Descripción</th>
+                                    <th class="py-3 text-end">Tipo Pase</th>
+                                    <th class="pe-4 py-3 text-end">Cotización (ARS)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (row of evolutionData; track row.fecha) {
+                                    @for (det of row.detalle; track det.codigoMoneda) {
+                                        <tr>
+                                            <td class="ps-4 fw-semibold text-secondary">{{ row.fecha | date: 'dd/MM/yyyy' : 'UTC' }}</td>
+                                            <td>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">{{ det.codigoMoneda }}</span>
+                                            </td>
+                                            <td class="text-muted small">{{ det.descripcion }}</td>
+                                            <td class="text-end text-monospace">{{ det.tipoPase | number:'1.4-4' }}</td>
+                                            <td class="pe-4 text-end fw-bold text-primary-bank"> $ {{ det.tipoCotizacion | number:'1.2-2' }}</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        @else if (!loading && alreadySearched) {
+            <div class="alert alert-info shadow-sm border-0 d-flex align-items-center" role="alert">
+                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                <div>No se encontraron registros de cotizaciones para el rango seleccionado.</div>
+            </div>
+        }
+    </div>
+
+    <app-footer></app-footer>
+
+</div>
