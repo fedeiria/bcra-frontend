@@ -1,0 +1,117 @@
+$primary-bank: #11284d;
+$accent-gold: #f59f00;
+
+.text-primary-bank {
+    color: $primary-bank;
+}
+
+.font-monospace {
+    font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9rem;
+    color: #444;
+}
+
+.search-input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #dee2e6 !important;
+}
+
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+
+    .table {
+        th {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba($primary-bank, 0.1);
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            background-color: #f8f9fa;
+            white-space: nowrap;
+        }
+
+        td {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f1f1f1;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+
+            &:hover {
+                background-color: rgba($primary-bank, 0.03);
+            }
+        }
+    }
+
+    .text-primary-dark {
+        color: $primary-bank;
+    }
+
+    .bg-danger-subtle {
+        background-color: #f8d7da;
+    }
+}
+
+// Paginator style
+.custom-pagination {
+    margin-bottom: 2rem;
+    display: inline-flex;
+    width: auto;
+    list-style: none;
+    padding: 0;
+
+    .page-item {
+        flex: 0 0 auto;
+        
+        .page-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
+            height: 42px;
+            margin: 0 2px;
+            border-radius: 8px !important;
+            border: 1px solid #dee2e6;
+            color: $primary-bank;
+            background-color: white;
+            font-weight: 500;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: #f8f9fa;
+                border-color: $accent-gold;
+                color: $primary-bank;
+            }
+        }
+
+        &.active .page-link {
+            background-color: $primary-bank;
+            border-color: $primary-bank;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba($primary-bank, 0.2);
+        }
+
+        &.disabled .page-link {
+            color: #ccc;
+            background-color: #f8f9fa;
+            border-color: #eee;
+            cursor: not-allowed;
+        }
+    }
+}
+
+nav[aria-label="Page navigation"] {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}

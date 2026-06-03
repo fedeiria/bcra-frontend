@@ -1,0 +1,123 @@
+<div class="container-fluid p-0 animate__animated animate__fadeIn">
+
+    @if (errorMessage()) {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4 d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+                {{ errorMessage() }}
+            </div>
+            <button type="button" class="btn-close" (click)="errorMessage.set(null)" aria-label="Close"></button>
+        </div>
+    }
+    
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="input-group shadow-sm rounded-3">
+                <span class="input-group-text bg-white border-end-0 text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0 py-2 search-input" placeholder="Buscar banco, tipo de tarjeta o segmento..."
+                [value]="searchTerm()" (input)="onSearch($event)">
+            </div>
+            @if (searchTerm()) {
+                <p class="text-center small text-muted mt-2">
+                    Resultados de busqueda: <strong>{{ filteredCards().length }} tarjetas</strong> encontradas.
+                </p>
+            }
+        </div>
+    </div>
+
+    @if (isLoading()) {
+        <div class="d-flex justify-content-center align-items-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <span class="ms-3 text-muted">Obteniendo tarjetas del BCRA...</span>
+        </div>
+    }
+
+    @if (!isLoading() && filteredCards().length > 0) {
+
+        <div class="card border-0 shadow-sm custom-table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="ps-4">Entidad</th>
+                                <th scope="col">Tarjeta</th>
+                                <th scope="col">Segmento</th>
+                                <th scope="col" class="text-end">Mantenimiento (Mes)</th>
+                                <th scope="col" class="text-end">Renovación (Anual)</th>
+                                <th scope="col" class="text-end">TEA Financiación</th>
+                                <th scope="col" class="text-end pe-4">Ingreso Mín.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @for (card of paginatedCards(); track $index) {
+                                <tr>
+                                    <td class="ps-4 fw-medium text-secondary" style="min-width: 180px;">
+                                        {{ card.descripcionEntidad | titlecase }}
+                                    </td>
+                                    <td class="fw-bold text-primary-dark">
+                                        {{ card.nombreCompleto }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            {{ card.segmento }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end font-monospace">
+                                        {{ card.comisionMaximaAdministracionMantenimiento | currency:'ARS':'symbol-narrow' }}
+                                    </td>
+                                    <td class="text-end font-monospace">
+                                        {{ card.comisionMaximaRenovacion | currency:'ARS':'symbol-narrow' }}
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge bg-danger-subtle text-danger px-2 py-1">
+                                            {{ card.tasaEfectivaAnualMaximaFinanciacion | number:'1.1-2' }}%
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4 font-monospace text-success">
+                                        {{ card.ingresoMinimoMensual | currency:'ARS':'symbol-narrow' }}
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (totalPages() > 1) {
+                    <nav class="d-flex justify-content-center mt-5">
+                        <ul class="pagination custom-pagination shadow-sm">
+                            <li class="page-item" [class.disabled]="currentPage() === 1">
+                                <button class="page-link" (click)="goToPage(currentPage() - 1)">
+                                <i class="bi bi-chevron-left"></i>
+                                </button>
+                            </li>
+                            
+                            @for (page of pageNumbers(); track page) {
+                                <li class="page-item" [class.active]="currentPage() === page">
+                                <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+                                </li>
+                            }
+
+                            <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+                                <button class="page-link" (click)="goToPage(currentPage() + 1)">
+                                <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!isLoading() && filteredCards().length === 0) {
+        <div class="alert alert-info text-center py-4 border-0 shadow-sm">
+            <i class="bi bi-credit-card fs-3 d-block mb-2"></i>
+            No se encontraron tarjetas de crédito para mostrar.
+        </div>
+    }
+</div>

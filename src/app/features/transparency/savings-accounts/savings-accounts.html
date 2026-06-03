@@ -1,0 +1,82 @@
+<div class="container-fluid p-0 animate__animated animate__fadeIn">
+
+    @if (errorMessage()) {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+            {{ errorMessage() }}
+            <button type="button" class="btn-close" (click)="errorMessage.set(null)"></button>
+        </div>
+    }
+
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="input-group shadow-sm rounded-3">
+                <span class="input-group-text bg-white border-end-0 text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0 py-2 search-input" placeholder="Buscar banco..."
+                [value]="searchTerm()" (input)="onSearch($event)">
+            </div>
+            @if (searchTerm()) {
+                <p class="text-center small text-muted mt-2">
+                    Resultados de busqueda: <strong>{{ filteredAccounts().length }} cajas de ahorro</strong> encontradas.
+                </p>
+            }
+        </div>
+    </div>
+
+    @if (isLoading()) {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    @else {
+        <div class="table-responsive shadow-sm rounded-3">
+            <table class="table table-hover align-middle bg-white mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Entidad Financiera</th>
+                        <th class="text-center">Proceso Simplificado</th>
+                        <th class="text-center">Última Actualización</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (acc of paginatedAccounts(); track acc.codigoEntidad + $index) {
+                        <tr>
+                            <td class="ps-4 fw-medium text-dark">{{ acc.descripcionEntidad }}</td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill"
+                                    [class]="acc.procesoSimplificadoDebidaDiligencia === 'SI' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle'">
+                                    {{ acc.procesoSimplificadoDebidaDiligencia === 'SI' ? 'Disponible' : 'No Disponible' }}
+                                </span>
+                            </td>
+                            <td class="text-center text-muted small">
+                                {{ acc.fechaInformacion | date:'dd/MM/yyyy' }}
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (totalPages() > 1) {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center custom-pagination">
+                    <li class="page-item" [class.disabled]="currentPage() === 1">
+                        <button class="page-link" (click)="goToPage(currentPage() - 1)">Anterior</button>
+                    </li>
+                    <li class="page-item active"><span class="page-link">{{ currentPage() }} / {{ totalPages() }}</span></li>
+                    <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+                        <button class="page-link" (click)="goToPage(currentPage() + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+
+    @if (!isLoading() && filteredAccounts().length === 0) {
+        <div class="alert alert-info text-center py-4 border-0 shadow-sm">
+            <i class="bi bi-credit-card fs-3 d-block mb-2"></i>
+            No se encontraron entidades para mostrar.
+        </div>
+    }
+</div>

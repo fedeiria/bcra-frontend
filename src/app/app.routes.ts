@@ -22,6 +22,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/exchange/exchange').then(c => c.Exchange),
   },
   {
+    path: 'transparency-regime',
+    loadChildren: () => import('./features/transparency/transparency.routes').then(r => r.TRANSPARENCY_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: ''
   }

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -9,10 +9,9 @@ import { IExchangeApiResponse, ICurrency, IRatesResponse, IEvolutionResponse } f
   providedIn: 'root'
 })
 export class ExchangeService {
+  private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/exchange`;
-
-  constructor(private http: HttpClient) {}
-
+  
   /**
    * Get the list of available currencies.
    * @returns Observable with the list of currencies.

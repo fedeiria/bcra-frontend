@@ -1,0 +1,53 @@
+<app-header></app-header>
+
+<div class="container-fluid py-5 bg-light min-vh-100">
+    <div class="container">
+        <div class="row mb-4 text-center">
+            <div class="col-12">
+                <div class="d-flex justify-content-center align-items-center gap-3 mb-2">
+                    <h2 class="mb-0 fw-bold text-primary-dark">Régimen de Transparencia</h2>
+                </div>
+                <p class="text-muted">
+                    Consulta y comparativa de productos y servicios financieros informados por las entidades al BCRA.
+                </p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <ul class="nav nav-pills custom-pills p-2 bg-white rounded-3 shadow-sm">
+                    <li class="nav-item">
+                        <a class="nav-link" routerLink="product-packages" routerLinkActive="active">
+                            <i class="bi bi-box-seam me-2"></i>Paquetes de Productos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" routerLink="credit-cards" routerLinkActive="active">
+                            <i class="bi bi-credit-card me-2"></i>Tarjetas de Crédito
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" routerLink="fixed-terms" routerLinkActive="active">
+                            <i class="bi bi-piggy-bank me-2"></i>Plazos Fijos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" routerLink="savings-accounts" routerLinkActive="active">
+                            <i class="bi bi-wallet2 me-2"></i>Cajas de Ahorro
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="bg-white p-4 rounded-3 shadow-sm border-0">
+                    <router-outlet></router-outlet>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-footer></app-footer>

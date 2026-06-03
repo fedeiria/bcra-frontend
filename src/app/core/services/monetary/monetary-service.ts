@@ -12,14 +12,29 @@ export class MonetaryService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/monetary`;
 
+  /**
+   * Get the list of monetary variables.
+   * @returns An observable of the API response containing an array of monetary variables.
+   */
   getVariables(): Observable<IMonetaryApiResponse<IMonetaryVariable[]>> {
     return this.http.get<IMonetaryApiResponse<IMonetaryVariable[]>>(`${this.apiUrl}/variables`);
   }
 
+  /**
+   * Get the list of methodologies.
+   * @returns An observable of the API response containing an array of methodologies.
+   */
   getMethodologies(): Observable<IMonetaryApiResponse<IMonetaryMethodology[]>> {
     return this.http.get<IMonetaryApiResponse<IMonetaryMethodology[]>>(`${this.apiUrl}/methodologies`);
   }
 
+  /**
+   * Get the historical data for a specific variable, optionally filtered by date range.
+   * @param id The ID of the variable to retrieve history for.
+   * @param desde The start date for the historical data (optional, format: YYYY-MM-DD).
+   * @param hasta The end date for the historical data (optional, format: YYYY-MM-DD).
+   * @returns An observable of the API response containing the historical data for the specified variable.
+   */
   getVariableHistory(id: number, desde?: string, hasta?: string): Observable<IMonetaryApiResponse<IMonetaryHistoryResult[]>> {
     let params = new HttpParams();
     if (desde) params = params.set('desde', desde);
