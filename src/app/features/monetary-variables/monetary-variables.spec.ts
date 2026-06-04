@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Monetary } from './monetary';
+import { MonetaryVariables } from './monetary-variables';
 
-describe('Monetary', () => {
-  let component: Monetary;
-  let fixture: ComponentFixture<Monetary>;
+describe('MonetaryVariables', () => {
+  let component: MonetaryVariables;
+  let fixture: ComponentFixture<MonetaryVariables>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Monetary]
+      imports: [MonetaryVariables]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Monetary);
+    fixture = TestBed.createComponent(MonetaryVariables);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

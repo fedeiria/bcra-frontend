@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Exchange } from './exchange';
+import { TransparencyRegime } from './transparency-regime';
 
-describe('Exchange', () => {
-  let component: Exchange;
-  let fixture: ComponentFixture<Exchange>;
+describe('TransparencyRegime', () => {
+  let component: TransparencyRegime;
+  let fixture: ComponentFixture<TransparencyRegime>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Exchange]
+      imports: [TransparencyRegime]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Exchange);
+    fixture = TestBed.createComponent(TransparencyRegime);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

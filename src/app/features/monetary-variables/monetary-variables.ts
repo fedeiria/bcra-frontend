@@ -11,13 +11,13 @@ import { Header } from '../../shared/components/header/header';
 import { Footer } from '../../shared/components/footer/footer';
 
 @Component({
-  selector: 'app-monetary',
+  selector: 'app-monetary-variables',
   standalone: true,
   imports: [CommonModule, FormsModule, Header, Footer],
-  templateUrl: './monetary.html',
-  styleUrl: './monetary.scss'
+  templateUrl: './monetary-variables.html',
+  styleUrl: './monetary-variables.scss'
 })
-export class Monetary implements OnInit {
+export class MonetaryVariables implements OnInit {
   private monetaryService = inject(MonetaryService);
 
   loading: boolean = true;

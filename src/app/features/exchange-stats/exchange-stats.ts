@@ -9,13 +9,13 @@ import { Header } from "../../shared/components/header/header";
 import { Footer } from "../../shared/components/footer/footer";
 
 @Component({
-  selector: 'app-exchange',
+  selector: 'app-exchange-stats',
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe, DecimalPipe, Header, Footer],
-  templateUrl: './exchange.html',
-  styleUrl: './exchange.scss',
+  templateUrl: './exchange-stats.html',
+  styleUrl: './exchange-stats.scss',
 })
-export class Exchange implements OnInit {
+export class ExchangeStats implements OnInit {
   currencies: ICurrency[] = [];
   evolutionData: IRatesResponse[] = [];
 

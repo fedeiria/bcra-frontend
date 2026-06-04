@@ -15,15 +15,15 @@ export const routes: Routes = [
   },
   {
     path: 'monetary-variables',
-    loadComponent: () => import('./features/monetary/monetary').then(c => c.Monetary),
+    loadComponent: () => import('./features/monetary-variables/monetary-variables').then(c => c.MonetaryVariables),
   },
   {
     path: 'exchange-stats',
-    loadComponent: () => import('./features/exchange/exchange').then(c => c.Exchange),
+    loadComponent: () => import('./features/exchange-stats/exchange-stats').then(c => c.ExchangeStats),
   },
   {
     path: 'transparency-regime',
-    loadChildren: () => import('./features/transparency/transparency.routes').then(r => r.TRANSPARENCY_ROUTES),
+    loadChildren: () => import('./features/transparency-regime/transparency-regime.routes').then(r => r.TRANSPARENCY_ROUTES),
   },
   {
     path: '**',

@@ -30,12 +30,11 @@
     @if (isLoading()) {
         <div class="d-flex justify-content-center align-items-center py-5">
             <div class="spinner-border text-primary" role="status"></div>
-            <span class="ms-3 text-muted">Obteniendo tarjetas del BCRA...</span>
+            <span class="ms-3 text-muted">Obteniendo datos del BCRA...</span>
         </div>
     }
 
     @if (!isLoading() && filteredCards().length > 0) {
-
         <div class="card border-0 shadow-sm custom-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -120,4 +119,5 @@
             No se encontraron tarjetas de crédito para mostrar.
         </div>
     }
+    
 </div>

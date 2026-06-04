@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
 
-import { Transparency } from './transparency';
+import { TransparencyRegime } from './transparency-regime';
 
 export const TRANSPARENCY_ROUTES: Routes = [
   {
     path: '',
-    component: Transparency,
+    component: TransparencyRegime,
     children: [
       {
         path: 'product-packages',
@@ -22,6 +22,10 @@ export const TRANSPARENCY_ROUTES: Routes = [
       {
         path: 'savings-accounts',
         loadComponent: () => import('./savings-accounts/savings-accounts').then(m => m.SavingsAccounts)
+      },
+      {
+        path: 'personal-loans',
+        loadComponent: () => import('./personal-loans/personal-loans').then(m => m.PersonalLoans)
       },
       {
         path: '',

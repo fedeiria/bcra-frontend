@@ -6,11 +6,11 @@ import { Header } from "../../shared/components/header/header";
 import { Footer } from "../../shared/components/footer/footer";
 
 @Component({
-  selector: 'app-transparency',
+  selector: 'app-transparency-regime',
   imports: [CommonModule, RouterModule, Header, Footer],
-  templateUrl: './transparency.html',
-  styleUrl: './transparency.scss',
+  templateUrl: './transparency-regime.html',
+  styleUrl: './transparency-regime.scss',
 })
-export class Transparency {
+export class TransparencyRegime {
 
 }

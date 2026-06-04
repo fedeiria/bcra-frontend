@@ -39,3 +39,21 @@ export interface ISavingsAccount {
     fechaInformacion: string;
     procesoSimplificadoDebidaDiligencia: string;
 }
+
+export interface IPersonalLoan {
+    codigoEntidad: number;
+    descripcionEntidad: string;
+    nombreCompleto: string;
+    nombreCorto: string;
+    denominacion: string;
+    montoMinimoOtorgable: number;
+    montoMaximoOtorgable: number;
+    plazoMaximoOtorgable: number;
+    ingresoMinimoMensual: number;
+    tasaEfectivaAnualMaxima: number;
+    costoFinancieroEfectivoTotalMaximo: number;
+    cuotaInicial: number;
+    relacionCuotaIngreso: number;
+    tipoTasa: string;
+    fechaInformacion: string;
+}
