@@ -1,0 +1,168 @@
+<div class="container-fluid animate__animated animate__fadeIn">
+
+    @if (errorMessage()) {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4 d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+                {{ errorMessage() }}
+            </div>
+            <button type="button" class="btn-close" (click)="errorMessage.set(null)" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="input-group shadow-sm rounded-3">
+                <span class="input-group-text bg-white border-end-0 text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0 py-2 search-input" placeholder="Buscar banco o destino (Nuevos, Usados...)"
+                [value]="searchTerm()" (input)="onSearch($event)">
+            </div>
+            @if (searchTerm()) {
+                <p class="text-center small text-muted mt-2">
+                    Resultados de busqueda: <strong>{{ filteredLoans().length }} créditos prendarios</strong> encontrados.
+                </p>
+            }
+        </div>
+    </div>
+
+    @if (isLoading()) {
+        <div class="d-flex justify-content-center align-items-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <span class="ms-3 text-muted">Obteniendo datos del BCRA...</span>
+        </div>
+    }
+
+    @if (!isLoading() && filteredLoans().length > 0) {
+
+        <div class="row g-4">
+            @for (loan of paginatedLoans(); track $index) {
+                <div class="col-xl-4 col-md-6">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h6 class="fw-bold text-dark mb-0">
+                                    {{ loan.descripcionEntidad }}
+                                </h6>
+                                <span class="badge bg-light text-dark border">
+                                    {{ loan.denominacion }}
+                                </span>
+                            </div>
+
+                            <div class="text-center p-3 mb-3 rounded-3" style="background-color: #f8f9fa;">
+                                <div class="small text-muted">
+                                    Financia hasta el
+                                </div>
+                                <div class="h3 fw-bold mb-0" style="color: #11284d;">
+                                    {{ loan.relacionMontoTasacion }}%
+                                </div>
+                                <div class="small text-muted">
+                                    del valor del vehículo
+                                </div>
+                            </div>
+
+                            <div class="row mb-3 text-center small">
+                                <div class="col-6 border-end">
+                                    <div class="text-muted">CFTEA Máx.</div>
+                                    <div class="fw-bold text-danger">
+                                        {{ loan.costoFinancieroEfectivoTotalMaximo }}%
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted">Plazo</div>
+                                    <div class="fw-bold">
+                                        {{ loan.plazoMaximoOtorgable }} meses
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="small mb-0"><i class="bi bi-info-circle me-1"></i> 
+                                {{ loan.destinoFondos }}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pb-3">
+                            <button class="btn btn-outline-bank btn-sm w-100" (click)="openModal(loan)">
+                                Ver condiciones adicionales
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (totalPages() > 1) {
+            <nav class="d-flex justify-content-center mt-5">
+                <ul class="pagination custom-pagination shadow-sm">
+                    <li class="page-item" [class.disabled]="currentPage() === 1">
+                        <button class="page-link" (click)="goToPage(currentPage() - 1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+                    
+                    @for (page of pageNumbers(); track page) {
+                        <li class="page-item" [class.active]="currentPage() === page">
+                            <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+                        </li>
+                    }
+
+                    <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+                        <button class="page-link" (click)="goToPage(currentPage() + 1)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        }
+
+        @if (!isLoading() && filteredLoans().length === 0) {
+            <div class="alert alert-info text-center py-4 border-0 shadow-sm">
+                <i class="bi bi-credit-card fs-3 d-block mb-2"></i>
+                No se encontraron créditos prendarios para mostrar.
+            </div>
+        }
+    }
+
+    @if (selectedLoan(); as loan) {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0">
+                    <div class="modal-header text-white" style="background-color: #11284d;">
+                        <h5 class="modal-title small"><i class="bi bi-shield-check me-2"></i>Detalle de Prenda</h5>
+                        <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Relación Cuota/Ingreso:</span>
+                                <strong>
+                                    {{ loan.relacionCuotaIngreso }}%
+                                </strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Antigüedad Laboral:</span>
+                                <strong>
+                                    {{ loan.antiguedadLaboralMinimaMeses }} meses
+                                </strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Edad Máxima:</span>
+                                <strong>
+                                    {{ loan.edadMaximaSolicitada }} años
+                                </strong>
+                            </li>
+                        </ul>
+                        <div class="mt-3 p-3 rounded bg-light border">
+                            <div class="fw-bold mb-1 small">
+                                Más información:
+                            </div>
+                            <div class="small text-muted">
+                                {{ loan.masInformacion || 'Sin datos adicionales.' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

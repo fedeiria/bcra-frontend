@@ -28,6 +28,14 @@ export const TRANSPARENCY_ROUTES: Routes = [
         loadComponent: () => import('./personal-loans/personal-loans').then(m => m.PersonalLoans)
       },
       {
+        path: 'mortgage-loans',
+        loadComponent: () => import('./mortgage-loans/mortgage-loans').then(m => m.MortgageLoans)
+      },
+      {
+        path: 'pledge-loans',
+        loadComponent: () => import('./pledge-loans/pledge-loans').then(m => m.PledgeLoans)
+      },
+      {
         path: '',
         redirectTo: 'product-packages',
         pathMatch: 'full'

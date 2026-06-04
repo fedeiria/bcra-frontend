@@ -53,9 +53,9 @@
                         <tbody>
 
                             @for (card of paginatedCards(); track $index) {
-                                <tr>
-                                    <td class="ps-4 fw-medium text-secondary" style="min-width: 180px;">
-                                        {{ card.descripcionEntidad | titlecase }}
+                                <tr class="credit-card">
+                                    <td class="ps-4 bank-name" style="min-width: 180px;">
+                                        {{ card.descripcionEntidad }}
                                     </td>
                                     <td class="fw-bold text-primary-dark">
                                         {{ card.nombreCompleto }}
@@ -65,10 +65,10 @@
                                             {{ card.segmento }}
                                         </span>
                                     </td>
-                                    <td class="text-end font-monospace">
+                                    <td class="text-muted text-end">
                                         {{ card.comisionMaximaAdministracionMantenimiento | currency:'ARS':'symbol-narrow' }}
                                     </td>
-                                    <td class="text-end font-monospace">
+                                    <td class="text-muted text-end">
                                         {{ card.comisionMaximaRenovacion | currency:'ARS':'symbol-narrow' }}
                                     </td>
                                     <td class="text-end">
@@ -76,7 +76,7 @@
                                             {{ card.tasaEfectivaAnualMaximaFinanciacion | number:'1.1-2' }}%
                                         </span>
                                     </td>
-                                    <td class="text-end pe-4 font-monospace text-success">
+                                    <td class="text-end pe-4 text-success">
                                         {{ card.ingresoMinimoMensual | currency:'ARS':'symbol-narrow' }}
                                     </td>
                                 </tr>

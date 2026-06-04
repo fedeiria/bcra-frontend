@@ -51,7 +51,7 @@
                     @for (loan of paginatedLoans(); track $index) {
                         <tr>
                             <td class="ps-4">
-                                <div class="fw-bold">{{ loan.descripcionEntidad | titlecase }}</div>
+                                <div class="bank-name">{{ loan.descripcionEntidad }}</div>
                                 <small class="text-muted">{{ loan.nombreCorto }} - {{ loan.tipoTasa }}</small>
                             </td>
                             <td>
@@ -60,13 +60,15 @@
                                     {{ loan.denominacion }}
                                 </span>
                             </td>
-                            <td class="text-end fw-normal text-danger fs-6">
+                            <td class="text-end text-danger fs-6">
                                 {{ loan.costoFinancieroEfectivoTotalMaximo }}%
                             </td>
-                            <td class="text-end">
+                            <td class="text-end text-muted">
                                 {{ loan.montoMaximoOtorgable | currency:'ARS':'symbol-narrow':'1.0-0' }}
                             </td>
-                            <td class="text-center">{{ loan.plazoMaximoOtorgable }} meses</td>
+                            <td class="text-center text-muted">
+                                {{ loan.plazoMaximoOtorgable }} meses
+                            </td>
                             <td class="text-end text-muted">
                                 {{ loan.ingresoMinimoMensual | currency:'ARS':'symbol-narrow':'1.0-0' }}
                             </td>

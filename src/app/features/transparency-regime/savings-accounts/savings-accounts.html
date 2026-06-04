@@ -44,10 +44,10 @@
                 <tbody>
                     @for (acc of paginatedAccounts(); track acc.codigoEntidad + $index) {
                         <tr>
-                            <td class="ps-4 fw-medium text-dark">{{ acc.descripcionEntidad }}</td>
+                            <td class="ps-4 bank-name">{{ acc.descripcionEntidad }}</td>
                             <td class="text-center">
-                                <span class="badge rounded-pill"
-                                    [class]="acc.procesoSimplificadoDebidaDiligencia === 'SI' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle'">
+                                <span class="badge"
+                                    [class]="acc.procesoSimplificadoDebidaDiligencia === 'SI' ? 'bg-success-subtle text-success border' : 'bg-secondary-subtle text-secondary'">
                                     {{ acc.procesoSimplificadoDebidaDiligencia === 'SI' ? 'Disponible' : 'No Disponible' }}
                                 </span>
                             </td>

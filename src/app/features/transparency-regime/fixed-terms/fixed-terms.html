@@ -51,14 +51,14 @@
                     @for (item of paginatedTerms(); track item.codigoEntidad + item.nombreCompleto + item.canalConstitucion + $index) {
                         <tr>
                             <td class="ps-4">
-                                <div class="fw-bold text-secondary">{{ item.descripcionEntidad | titlecase }}</div>
+                                <div class="bank-name">{{ item.descripcionEntidad }}</div>
                                 <small class="text-muted">Actualizado: {{ item.fechaInformacion | date:'dd/MM/yyyy' }}</small>
                             </td>
                             <td>
                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">
                                     {{ item.nombreCorto }}
                                 </span>
-                                <small class="d-block text-truncate" style="max-width: 150px;" [title]="item.nombreCompleto">
+                                <small class="d-block text-muted text-truncate" style="max-width: 150px;" [title]="item.nombreCompleto">
                                     {{ item.nombreCompleto }}
                                 </small>
                             </td>
@@ -70,7 +70,7 @@
                             <td class="text-end fw-bold text-success">
                                 {{ item.tasaEfectivaAnualMinima }}%
                             </td>
-                            <td class="text-end font-monospace">
+                            <td class="text-muted text-end small">
                                 {{ item.montoMinimoInvertir | currency:'ARS':'symbol-narrow':'1.0-0' }}
                             </td>
                             <td class="text-center">

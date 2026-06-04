@@ -57,3 +57,46 @@ export interface IPersonalLoan {
     tipoTasa: string;
     fechaInformacion: string;
 }
+
+export interface IMortgageLoan {
+    codigoEntidad: number;
+    descripcionEntidad: string;
+    nombreCompleto: string;
+    nombreCorto: string;
+    denominacion: string;
+    destinoFondos: string;
+    montoMaximoOtorgable: number;
+    plazoMaximoOtorgable: number;
+    ingresoMinimoMensual: number;
+    relacionMontoTasacion: number;
+    relacionCuotaIngreso: number;
+    tasaEfectivaAnualMaxima: number;
+    costoFinancieroEfectivoTotalMaximo: number;
+    cuotaInicial: number;
+    antiguedadLaboralMinimaMeses: number;
+    edadMaximaSolicitada: number;
+    beneficiario: string;
+    fechaInformacion: string;
+    masInformacion?: string;
+    cargoMaximoCancelacionAnticipada?: number;
+}
+
+export interface IPledgeLoan {
+    codigoEntidad: number;
+    descripcionEntidad: string;
+    denominacion: string;
+    destinoFondos: string;
+    montoMaximoOtorgable: number;
+    plazoMaximoOtorgable: number;
+    ingresoMinimoMensual: number;
+    relacionMontoTasacion: number;
+    tasaEfectivaAnualMaxima: number;
+    costoFinancieroEfectivoTotalMaximo: number;
+    cuotaInicial: number;
+    relacionCuotaIngreso: number;
+    antiguedadLaboralMinimaMeses: number;
+    fechaInformacion: string;
+    masInformacion?: string;
+    territorioValidez: string;
+    edadMaximaSolicitada: number;
+}

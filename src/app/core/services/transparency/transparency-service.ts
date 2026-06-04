@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
-import { ICreditCard, IProductPackage, IFixedTerm, ISavingsAccount, IPersonalLoan } from '../../../models/interfaces/itransparency';
+import { ICreditCard, IProductPackage, IFixedTerm, ISavingsAccount, IPersonalLoan, IMortgageLoan, IPledgeLoan } from '../../../models/interfaces/itransparency';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -64,5 +64,21 @@ export class TransparencyService {
    */
   getPersonalLoans(): Observable<IPersonalLoan[]> {
     return this.http.get<IPersonalLoan[]>(`${this.apiUrl}/personal-loans`);
+  }
+
+  /**
+   * Get mortgage loans from the API.
+   * @returns An observable of an array of IMortgageLoan objects.
+   */
+  getMortgageLoans(): Observable<IMortgageLoan[]> {
+    return this.http.get<IMortgageLoan[]>(`${this.apiUrl}/mortgage-loans`);
+  }
+
+  /**
+   * Get pledge loans from the API.
+   * @returns An observable of an array of IPledgeLoan objects.
+   */
+  getPledgeLoans(): Observable<IPledgeLoan[]> {
+    return this.http.get<IPledgeLoan[]>(`${this.apiUrl}/pledge-loans`);
   }
 }

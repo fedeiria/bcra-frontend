@@ -1,12 +1,12 @@
 import { Component, inject, OnInit, computed, signal } from '@angular/core';
-import { CurrencyPipe, TitleCasePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 
 import { IPersonalLoan } from '../../../models/interfaces/itransparency';
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
 
 @Component({
   selector: 'app-personal-loans',
-  imports: [CurrencyPipe, TitleCasePipe],
+  imports: [CurrencyPipe],
   templateUrl: './personal-loans.html',
   styleUrl: './personal-loans.scss',
 })
@@ -35,10 +35,10 @@ export class PersonalLoans implements OnInit {
           this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
         }
         else {
-          this.errorMessage.set('Se produjo un error al cargar los plazos fijos. Por favor, inténtelo de nuevo más tarde.');
+          this.errorMessage.set('Se produjo un error al cargar los préstamos personales. Por favor, inténtelo de nuevo más tarde.');
         }
         this.isLoading.set(false);
-        console.error('fixed-terms.ts: ', err);
+        console.error('personal-loans.ts: ', err);
       }
     });
   }

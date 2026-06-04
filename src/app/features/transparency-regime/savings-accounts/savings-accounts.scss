@@ -5,6 +5,18 @@ $accent-gold: #f59f00;
     color: $primary-bank;
 }
 
+.badge {
+    font-weight: 500;
+    border-radius: 3px;
+    padding: 0.5rem 1.5rem;
+}
+
+.bank-name {
+    font-size: 0.90rem;
+    font-weight: 700;
+    color: #6c757d;
+}
+
 .font-monospace {
     font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-size: 0.9rem;
