@@ -1,6 +1,7 @@
 @use "sass:color";
 
-$primary-bank: #004b93;
+$primary-bank: #0a3a60;
+$accent-gold: #f59f00;
 
 .main-layout {
     display: flex;
@@ -10,6 +11,10 @@ $primary-bank: #004b93;
 }
 
 .text-primary-bank {
+    color: $primary-bank;
+}
+
+.text-primary-dark {
     color: $primary-bank;
 }
 
