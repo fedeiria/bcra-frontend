@@ -38,7 +38,7 @@ export class MortgageLoans implements OnInit {
           this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
         }
         else {
-          this.errorMessage.set('Se produjo un error al cargar los préstamos hipotecarios. Por favor, inténtelo de nuevo más tarde.');
+          this.errorMessage.set('Se produjo un error al intentar cargar los datos de créditos hipotecarios. Por favor, inténtelo de nuevo más tarde.');
         }
         this.isLoading.set(false);
         console.error('mortgage-loans.ts: ', err);

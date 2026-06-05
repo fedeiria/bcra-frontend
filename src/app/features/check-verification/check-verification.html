@@ -57,13 +57,6 @@
                     </div>
                 </div>
 
-                @if (errorMessage) {
-                    <div class="alert alert-danger d-flex align-items-center animate__animated animate__fadeIn">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div>{{ errorMessage }}</div>
-                    </div>
-                }
-
                 @if (result && result.results) {
                     <div class="animate__animated animate__fadeInUp mt-4">
                         <div class="card result-card shadow-lg" [class.result-denounced]="result.results.denunciado"
@@ -155,6 +148,16 @@
 
                             </div>
                         </div>
+                    </div>
+                }
+
+                @if (errorMessage()) {
+                    <div class="alert bg-white border-0 border-start border-4 border-danger alert-dismissible fade show shadow-sm mb-4 d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-circle-fill fs-4 me-3 text-danger"></i>
+                        <div class="text-secondary fw-medium">
+                            {{ errorMessage() }}
+                        </div>
+                        <button type="button" class="btn-close" (click)="errorMessage.set(null)" aria-label="Close"></button>
                     </div>
                 }
 

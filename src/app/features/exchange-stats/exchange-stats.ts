@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -25,7 +25,8 @@ export class ExchangeStats implements OnInit {
 
   loading: boolean = false;
   alreadySearched: boolean = false;
-  errorMessage: string = '';
+
+  errorMessage = signal<string | null>(null);
 
   constructor(private exchangeService: ExchangeService) { }
 
@@ -45,11 +46,11 @@ export class ExchangeStats implements OnInit {
         this.currencies = res.data;
       }
       else {
-        this.errorMessage = res.message || 'Error al cargar el listado de monedas.';
+        this.errorMessage.set(res.message || 'Error al cargar el listado de monedas.');
       }
     }
     catch (error) {
-      this.errorMessage = 'No se pudo conectar con el servidor para obtener las monedas.';
+      this.errorMessage.set('No se pudo conectar con el servidor para obtener las estadisticas cambiarias.');
     }
   }
 
@@ -62,7 +63,7 @@ export class ExchangeStats implements OnInit {
 
     this.loading = true;
     this.alreadySearched = true;
-    this.errorMessage = '';
+    this.errorMessage.set(null);
     this.evolutionData = [];
 
     try {
@@ -75,11 +76,11 @@ export class ExchangeStats implements OnInit {
         this.alreadySearched = true;
       }
       else {
-        this.errorMessage = res.message || 'Error al procesar la consulta.';
+        this.errorMessage.set(res.message || 'Error al procesar la consulta.');
       }
     }
     catch (error) {
-      this.errorMessage = 'Ocurrió un error inesperado al consultar las estadísticas.';
+      this.errorMessage.set('Ocurrió un error inesperado al consultar las estadísticas.');
     }
     finally {
       this.loading = false;

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -23,7 +23,8 @@ export class MonetaryVariables implements OnInit {
   loading: boolean = true;
   loadingHistory: boolean = false;
   alreadySearched: boolean = false;
-  errorMessage: string = '';
+
+  errorMessage = signal<string | null>(null);
 
   private variables: IMonetaryVariable[] = [];
   selectedVariable: IMonetaryVariable | null = null;
@@ -45,7 +46,7 @@ export class MonetaryVariables implements OnInit {
    */
   private async loadInitialData(): Promise<void> {
     this.loading = true;
-    this.errorMessage = '';
+    this.errorMessage.set(null);
     
     try {
       const [variablesRes, methodologiesRes] = await Promise.all([
@@ -69,7 +70,7 @@ export class MonetaryVariables implements OnInit {
       }
     }
     catch (error) {
-      this.errorMessage = 'Error cargando datos del BCRA.';
+      this.errorMessage.set('No se pudo conectar con el servidor para obtener las variables monetarias.');
     }
     finally {
       this.loading = false;
@@ -83,7 +84,7 @@ export class MonetaryVariables implements OnInit {
    */
   async viewHistory(variable: IMonetaryVariable): Promise<void> {
     this.selectedVariable = variable;
-    this.errorMessage = '';
+    this.errorMessage.set(null);
     this.loadingHistory = true;
     
     const hoy = new Date();
@@ -104,7 +105,7 @@ export class MonetaryVariables implements OnInit {
       }
     }
     catch (error) {
-      this.errorMessage = 'Error cargando historial.';
+      this.errorMessage.set('Error cargando historial.');
       this.historyData = [];
     }
     finally {

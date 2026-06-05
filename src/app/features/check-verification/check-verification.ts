@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -31,7 +31,8 @@ export class CheckVerification implements OnInit {
   
   loadingBanks: boolean = false;
   loadingQuery: boolean = false;
-  errorMessage: string | null = null;
+
+  errorMessage = signal<string | null>(null);
 
   constructor(private checkService: CheckService, private exportService: ExportService) {}
 
@@ -44,21 +45,28 @@ export class CheckVerification implements OnInit {
    * @returns void.
    */
   private loadBankingEntities(): void {
+    this.errorMessage.set(null);
     this.loadingBanks = true;
+
     this.checkService.getBankingEntities().subscribe({
       next: (res) => {
         if (!res.error && res.data) {
           this.banks = res.data;
         }
         else {
-          this.errorMessage = 'No se pudo cargar la lista de bancos.';
+          this.errorMessage.set('No se pudo cargar la lista de bancos.');
         }
         this.loadingBanks = false;
       },
       error: (err) => {
-        console.error('Error de conexión:', err);
-        this.errorMessage = 'Error de conexión al obtener entidades.';
+        if (!navigator.onLine) {
+          this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
+        }
+        else {
+          this.errorMessage.set('Se produjo un error al intentar obtener las entidades bancarias. Por favor, inténtelo de nuevo más tarde.');
+        }
         this.loadingBanks = false;
+        console.error('credit-cards.ts: ', err);
       }
     });
   }
@@ -69,12 +77,12 @@ export class CheckVerification implements OnInit {
    */
   consultReportedCheck(): void {
     if (!this.selectedBankCode || !this.checkNumber) {
-      this.errorMessage = 'Por favor, seleccione un banco e ingrese el número de cheque.';
+      this.errorMessage.set('Por favor, seleccione un banco e ingrese el número de cheque.');
       return;
     }
 
     this.loadingQuery = true;
-    this.errorMessage = null;
+    this.errorMessage.set(null);
     this.result = null;
 
     this.checkService.searchCheck(this.selectedBankCode, this.checkNumber).subscribe({
@@ -85,12 +93,12 @@ export class CheckVerification implements OnInit {
           this.checkNumber = '';
         }
         else {
-          this.errorMessage = res.message || 'Error al consultar el cheque.';
+          this.errorMessage.set(res.message || 'Error al consultar el cheque.');
         }
         this.loadingQuery = false;
       },
       error: () => {
-        this.errorMessage = 'Error de comunicación con el servidor.';
+        this.errorMessage.set('Error de comunicación con el servidor.');
         this.loadingQuery = false;
       }
     });

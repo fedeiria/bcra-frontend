@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg app-header px-4">
     <div class="container-fluid p-0 position-relative">
 
-        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+        <a routerLink="/" class="d-flex align-items-center gap-2 flex-shrink-0 text-decoration-none text-reset" style="cursor: pointer;">
             <div class="header-logo-container">
                 <img src="images/brand_logo.png" alt="BCRA Consultas Logo" class="header-brand-logo">
             </div>
@@ -10,7 +10,7 @@
                 <span class="app-title">BCRA Consultas</span>
                 <span class="app-subtitle text-white-50">Plataforma Integral Crediticia</span>
             </div>
-        </div>
+        </a>
 
         <button class="navbar-toggler border-0 text-white p-0" type="button" (click)="toggleMenu()"
             [attr.aria-expanded]="isMenuOpen" aria-label="Toggle navigation">
@@ -19,7 +19,7 @@
 
         <div class="collapse navbar-collapse" id="headerNav" [class.show]="isMenuOpen">
             <div class="navbar-nav gap-2 gap-lg-4 py-3 py-lg-0 text-center text-lg-start absolute-center-lg">
-                <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+                <a routerLink="/credit-report" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
                     class="nav-item-link" (click)="closeMenu()">
                     <i class="bi bi-person-badge me-2"></i>Situación Crediticia
                 </a>
