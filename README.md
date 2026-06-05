@@ -18,7 +18,7 @@ Interfaz moderna y reactiva desarrollada en **Angular 19** para la visualizació
 
 | Herramienta | Uso |
 | :--- | :--- |
-| **Angular 20** | Framework de desarrollo principal. |
+| **Angular 19** | Framework de desarrollo principal. |
 | **Bootstrap 5** | Estilos, grillas y maquetación responsiva. |
 | **Bootstrap Icons** | Librería de iconos vectoriales. |
 | **Animate.css** | Animaciones para componentes de alerta. |
@@ -33,7 +33,7 @@ La aplicación consume un middleware propio construido en **NestJS**. Para una c
 ```typescript
 export const environment = {
   production: true,
-  apiUrl: 'https://central-deudores-backend.onrender.com/api'
+  apiUrl: '[https://central-deudores-backend.onrender.com/api](https://central-deudores-backend.onrender.com/api)'
 };
 
 ### Desarrollo (`src/environments/environment.ts`)
@@ -47,17 +47,15 @@ export const environment = {
 
 Clonar el repositorio:
 
-```bash
-git clone https://github.com/fedeiria/bcra-frontend.git
+git clone [https://github.com/fedeiria/bcra-frontend.git](https://github.com/fedeiria/bcra-frontend.git)
 
 Instalar dependencias:
 
 2. **Instalar dependencias:**
-   ```bash
 npm install
 
 3. **Ejecutar en desarrollo:**
-   ```bash
 ng serve
 
 🚀 Navegá a http://localhost:4200/
+```
