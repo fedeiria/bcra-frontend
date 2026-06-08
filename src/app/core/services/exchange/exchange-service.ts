@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
+import { convertToDateFormat } from '../../../shared/utils/date-formatters';
 import { IExchangeApiResponse, ICurrency, IRatesResponse, IEvolutionResponse } from '../../../models/interfaces/iexchange';
 
 @Injectable({
@@ -37,15 +38,15 @@ export class ExchangeService {
   /**
    * Get the historical evolution of a specific currency.
    * @param moneda Código ISO (ej: 'USD', 'EUR')
-   * @param desde Format 'yyyy-MM-dd'
-   * @param hasta Format 'yyyy-MM-dd'
+   * @param dateFrom Format 'yyyy-MM-dd'
+   * @param dateTo Format 'yyyy-MM-dd'
    * @returns Observable with the currency evolution data.
    */
-  getCurrencyEvolution(moneda: string, desde?: string, hasta?: string): Observable<IExchangeApiResponse<IEvolutionResponse>> {
+  getCurrencyEvolution(moneda: string, dateFrom?: string, dateTo?: string): Observable<IExchangeApiResponse<IEvolutionResponse>> {
     let params = new HttpParams();
 
-    if (desde) params = params.set('desde', desde);
-    if (hasta) params = params.set('hasta', hasta);
+    if (dateFrom) params = params.set('desde', convertToDateFormat(dateFrom));
+    if (dateTo) params = params.set('hasta', convertToDateFormat(dateTo));
 
     return this.http.get<IExchangeApiResponse<IEvolutionResponse>>(
       `${this.API_URL}/evolution/${moneda}`, { params });

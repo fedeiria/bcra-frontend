@@ -1,6 +1,6 @@
 # BCRA Dashboard - Frontend 📈
 
-Interfaz moderna y reactiva desarrollada en **Angular 19** para la visualización de indicadores financieros del Banco Central de la República Argentina (BCRA).
+Interfaz moderna y reactiva desarrollada en **Angular 19** para la visualización de indicadores financieros de las APIs oficiales del Banco Central de la República Argentina (BCRA).
 
 ---
 
@@ -10,7 +10,7 @@ Interfaz moderna y reactiva desarrollada en **Angular 19** para la visualizació
 * **📊 Historiales Detallados**: Tablas interactivas con la evolución histórica de divisas y tasas.
 * **🎨 Diseño Profesional**: Interfaz construida con **Bootstrap 5**, optimizada para la lectura de datos financieros complejos.
 * **⚠️ Feedback al Usuario**: Manejo de errores intuitivo mediante alertas dinámicas (Animate.css) y estados de carga (Spinners).
-* **🏗️ Arquitectura Limpia**: Uso de componentes *Standalone* y servicios modulares altamente escalables.
+* **🏗️ Arquitectura Limpia**: Uso de componentes *Standalone* y servicios modulares escalables.
 
 ---
 
