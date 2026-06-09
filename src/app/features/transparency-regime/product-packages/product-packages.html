@@ -38,7 +38,7 @@
         <div class="row justify-content-center">
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 
-                @for (paquete of paginatedPackages(); track $index) {
+                @for (paquete of pager.paginatedItems(); track $index) {
                     <div class="col">
                         <div class="card h-100 border-0 shadow-sm package-card">
 
@@ -89,29 +89,14 @@
                 }
             </div>
 
-            @if (totalPages() > 1) {
-                <nav aria-label="Page navigation" class="d-flex justify-content-center mt-5">
-                    <ul class="pagination custom-pagination shadow-sm rounded-3">
-                        <li class="page-item" [class.disabled]="currentPage() === 1">
-                            <button class="page-link" (click)="goToPage(currentPage() - 1)" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </button>
-                        </li>
-                
-                        @for (page of pageNumbers(); track page) {
-                            <li class="page-item" [class.active]="currentPage() === page">
-                                <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
-                            </li>
-                        }
-                
-                        <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-                            <button class="page-link" (click)="goToPage(currentPage() + 1)" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-            }
+            <!-- Paginator Component-->
+            <app-paginator 
+                [currentPage]="pager.currentPage()"
+                [totalPages]="pager.totalPages()"
+                [pageNumbers]="pager.pageNumbers()"
+                (pageChange)="pager.goToPage($event)">
+            </app-paginator>
+
         </div>
     }
 

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
 import { ICheckDetail } from '../../../../models/interfaces/icheck-detail';
-import { getCheckStatusConfig } from '../../../../shared/utils/credit-formatters';
+import { getCheckStatusConfig } from '../../../../shared/utils/credit-formatters.util';
 
 @Component({
   selector: 'app-rejected-checks',

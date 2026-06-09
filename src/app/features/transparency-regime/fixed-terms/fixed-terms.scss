@@ -1,5 +1,4 @@
 $primary-bank: #11284d;
-$accent-gold: #f59f00;
 
 .text-primary-bank {
     color: $primary-bank;
@@ -72,59 +71,4 @@ $accent-gold: #f59f00;
     .bg-danger-subtle {
         background-color: #f8d7da;
     }
-}
-
-// Paginator style
-.custom-pagination {
-    margin-bottom: 2rem;
-    display: inline-flex;
-    width: auto;
-    list-style: none;
-    padding: 0;
-
-    .page-item {
-        flex: 0 0 auto;
-        
-        .page-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 42px;
-            height: 42px;
-            margin: 0 2px;
-            border-radius: 8px !important;
-            border: 1px solid #dee2e6;
-            color: $primary-bank;
-            background-color: white;
-            font-weight: 500;
-            transition: all 0.2s ease;
-
-            &:hover {
-                background-color: #f8f9fa;
-                border-color: $accent-gold;
-                color: $primary-bank;
-            }
-        }
-
-        &.active .page-link {
-            background-color: $primary-bank;
-            border-color: $primary-bank;
-            color: white;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba($primary-bank, 0.2);
-        }
-
-        &.disabled .page-link {
-            color: #ccc;
-            background-color: #f8f9fa;
-            border-color: #eee;
-            cursor: not-allowed;
-        }
-    }
-}
-
-nav[aria-label="Page navigation"] {
-    width: 100%;
-    display: flex;
-    justify-content: center;
 }

@@ -1,32 +1,38 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
 
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
 import { ICreditCard } from '../../../models/interfaces/itransparency';
+import { PaginationStateManager } from '../../../shared/utils/pagination-state-manager.util';
+import { Paginator } from '../../../shared/components/paginator/paginator';
 
 @Component({
   selector: 'app-credit-cards',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DecimalPipe],
+  imports: [CommonModule, CurrencyPipe, DecimalPipe, Paginator],
   templateUrl: './credit-cards.html',
   styleUrl: './credit-cards.scss',
 })
 export class CreditCards implements OnInit {
 
-  private transparencyService = inject(TransparencyService);
-  
+  itemsPerPage = 8;
+
   // State signals
   cards = signal<ICreditCard[]>([]);
   isLoading = signal<boolean>(true);
-
-  // Filters and pagination
-  searchTerm = signal<string>('');
-  currentPage = signal<number>(1);
-
   errorMessage = signal<string | null>(null);
 
-  readonly itemsPerPage = 10;
+  // Filter
+  searchTerm = signal<string>('');
+
+  constructor(private transparencyService: TransparencyService) {
+    effect(() => {
+      this.pager.updateData(this.filteredCards());
+    });
+  }
+
+  pager = new PaginationStateManager<ICreditCard>(this.itemsPerPage);
 
   // Reactive filters
   filteredCards = computed(() => {
@@ -42,34 +48,6 @@ export class CreditCards implements OnInit {
 
       return entidad.includes(term) || nombre.includes(term) || segmento.includes(term);
     });
-  });
-
-  // Filter paginated results
-  paginatedCards = computed(() => {
-    const startIndex = (this.currentPage() - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-
-    return this.filteredCards().slice(startIndex, endIndex);
-  });
-
-  // Pagination logic
-  totalPages = computed(() => Math.ceil(this.filteredCards().length / this.itemsPerPage));
-
-  // Generate page numbers for pagination controls
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const maxVisible = 5;
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(total, start + maxVisible - 1);
-
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    const pages = [];
-    for (let i = start; i <= end; i++) { pages.push(i); }
-    return pages;
   });
 
   ngOnInit(): void {
@@ -102,17 +80,5 @@ export class CreditCards implements OnInit {
   onSearch(event: Event): void {
     const element = event.target as HTMLInputElement;
     this.searchTerm.set(element.value);
-    this.currentPage.set(1);
-  }
-
-  /**
-   * Navigates to a specific page.
-   * @param page The page number to navigate to.
-   * @return void. Updates the currentPage signal to the specified page number if it's within valid range.
-   */
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
   }
 }

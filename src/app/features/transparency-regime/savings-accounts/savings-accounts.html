@@ -45,7 +45,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (acc of paginatedAccounts(); track acc.codigoEntidad + $index) {
+                    @for (acc of pager.paginatedItems(); track acc.codigoEntidad + $index) {
                         <tr>
                             <td class="ps-4 bank-name">{{ acc.descripcionEntidad }}</td>
                             <td class="text-center">
@@ -63,19 +63,13 @@
             </table>
         </div>
 
-        @if (totalPages() > 1) {
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center custom-pagination">
-                    <li class="page-item" [class.disabled]="currentPage() === 1">
-                        <button class="page-link" (click)="goToPage(currentPage() - 1)">Anterior</button>
-                    </li>
-                    <li class="page-item active"><span class="page-link">{{ currentPage() }} / {{ totalPages() }}</span></li>
-                    <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-                        <button class="page-link" (click)="goToPage(currentPage() + 1)">Siguiente</button>
-                    </li>
-                </ul>
-            </nav>
-        }
+        <!-- Paginator Component-->
+        <app-paginator 
+            [currentPage]="pager.currentPage()"
+            [totalPages]="pager.totalPages()"
+            [pageNumbers]="pager.pageNumbers()"
+            (pageChange)="pager.goToPage($event)">
+        </app-paginator>
     }
 
     @if (!isLoading() && filteredAccounts().length === 0) {

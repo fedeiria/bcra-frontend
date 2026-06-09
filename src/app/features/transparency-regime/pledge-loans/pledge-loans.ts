@@ -1,26 +1,37 @@
-import { Component, inject, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, effect } from '@angular/core';
 
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
 import { IPledgeLoan } from '../../../models/interfaces/itransparency';
+import { PaginationStateManager } from '../../../shared/utils/pagination-state-manager.util';
+import { Paginator } from '../../../shared/components/paginator/paginator';
 
 @Component({
   selector: 'app-pledge-loans',
-  imports: [],
+  standalone: true,
+  imports: [Paginator],
   templateUrl: './pledge-loans.html',
   styleUrl: './pledge-loans.scss',
 })
 export class PledgeLoans implements OnInit {
 
-  loans = signal<IPledgeLoan[]>([]);
-  searchTerm = signal('');
+  itemsPerPage = 6;
+
+  // State signals
   isLoading = signal(true);
+  loans = signal<IPledgeLoan[]>([]);
   errorMessage = signal<string | null>(null);
   selectedLoan = signal<IPledgeLoan | null>(null);
 
-  currentPage = signal(1);
-  itemsPerPage = 6;
+  // Filter
+  searchTerm = signal<string>('');
 
-  private transparencyService = inject(TransparencyService);
+  constructor(private transparencyService: TransparencyService) {
+    effect(() => {
+      this.pager.updateData(this.filteredLoans());
+    });
+  }
+
+  pager = new PaginationStateManager<IPledgeLoan>(this.itemsPerPage);
 
   ngOnInit(): void {
     this.transparencyService.getPledgeLoans().subscribe({
@@ -56,34 +67,6 @@ export class PledgeLoans implements OnInit {
     });
   });
 
-  // Pagination logic
-  totalPages = computed(() => Math.ceil(this.filteredLoans().length / this.itemsPerPage));
-
-  // Generate page numbers for pagination controls
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const maxVisible = 5;
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(total, start + maxVisible - 1);
-
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    const pages = [];
-    for (let i = start; i <= end; i++) { pages.push(i); }
-    return pages;
-  });
-
-  // Filter paginated results
-  paginatedLoans = computed(() => {
-    const startIndex = (this.currentPage() - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-
-    return this.filteredLoans().slice(startIndex, endIndex);
-  });
-
   /**
    * Handles the search input event and updates the search term.
    * @param event The input event from the search field. The value of the input is used to filter the packages.
@@ -92,25 +75,22 @@ export class PledgeLoans implements OnInit {
   onSearch(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.searchTerm.set(value);
-    this.currentPage.set(1);
   }
 
   /**
-   * Navigates to a specific page.
-   * @param page The page number to navigate to.
-   * @return void. Updates the currentPage signal to the specified page number if it's within valid range.
+   * Open modal with loan details.
+   * @param loan The loan object containing the details to be displayed in the modal.
+   * @returns void. Sets the selectedLoan signal to the provided loan and adds a CSS class to the body to display the modal.
    */
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
-  }
-
-  openModal(loan: IPledgeLoan) {
+  openModal(loan: IPledgeLoan): void {
     this.selectedLoan.set(loan);
   }
   
-  closeModal() {
+  /**
+   * Close the modal and clear the selected loan.
+   * @returns void. Resets the selectedLoan signal to null and removes the CSS class from the body to hide the modal.
+   */
+  closeModal(): void {
     this.selectedLoan.set(null);
   }
 }

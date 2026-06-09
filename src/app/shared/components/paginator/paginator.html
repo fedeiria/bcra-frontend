@@ -1,0 +1,49 @@
+@if (totalPages() > 1) {
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination custom-pagination shadow-sm align-items-center">
+
+            <li class="page-item" [class.disabled]="currentPage() === 1">
+                <button class="page-link" (click)="onPageClick(1)" title="Primera página">
+                    <i class="bi bi-chevron-double-left"></i>
+                </button>
+            </li>
+
+            <li class="page-item" [class.disabled]="currentPage() === 1">
+                <button class="page-link" (click)="onPageClick(currentPage() - 1)" aria-label="Previous">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </li>
+
+            @if (visiblePages()[0] > 1) {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+
+            @for (page of visiblePages(); track page) {
+                <li class="page-item" [class.active]="currentPage() === page">
+                    <button class="page-link" (click)="onPageClick(page)">{{ page }}</button>
+                </li>
+            }
+
+            @if (visiblePages()[visiblePages().length - 1] < totalPages()) {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+
+            <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+                <button class="page-link" (click)="onPageClick(currentPage() + 1)" aria-label="Next">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </li>
+
+            <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+                <button class="page-link" (click)="onPageClick(totalPages())" title="Última página">
+                    <i class="bi bi-chevron-double-right"></i>
+                </button>
+            </li>
+
+        </ul>
+    </nav>
+}

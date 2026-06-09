@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { convertToDateFormat } from '../../../shared/utils/date-formatters';
+import { convertToDateFormat } from '../../../shared/utils/date-formatters.util';
 import { IExchangeApiResponse, ICurrency, IRatesResponse, IEvolutionResponse } from '../../../models/interfaces/iexchange';
 
 @Injectable({

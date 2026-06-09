@@ -19,7 +19,6 @@ export interface IRateDetail {
   tipoCotizacion: number;
 }
 
-
 // Rates for a specific date, including the date and an array of rate details
 export interface IRatesResponse {
   fecha: string | null;

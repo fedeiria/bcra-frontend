@@ -5,7 +5,7 @@ import autoTable from 'jspdf-autotable';
 
 import { IHistoricalItem } from '../../../models/interfaces/ihistorical-item';
 import { CREDIT_SITUATUION_CONFIG } from '../../../models/constants/credit-situation-config';
-import { formatPeriod } from '../../../shared/utils/date-formatters';
+import { formatPeriod } from '../../../shared/utils/date-formatters.util';
 
 @Injectable({
   providedIn: 'root',

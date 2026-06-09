@@ -16,7 +16,7 @@ import { ICreditSummary } from '../../models/interfaces/icredit-summary';
 import { IHistoricalItem } from '../../models/interfaces/ihistorical-item';
 import { IBatchItem } from '../../models/interfaces/ibatch-item';
 
-import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-formatters';
+import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-formatters.util';
 
 @Component({
   selector: 'app-credit-report',

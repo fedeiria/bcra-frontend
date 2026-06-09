@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
-import { formatPeriod } from '../../../../shared/utils/date-formatters';
-import { getSituationClass, getSituationLabel } from '../../../../shared/utils/credit-formatters';
+import { formatPeriod } from '../../../../shared/utils/date-formatters.util';
+import { getSituationClass, getSituationLabel } from '../../../../shared/utils/credit-formatters.util';
 
 import { IDebtEntityDetail } from '../../../../models/interfaces/idebt-entity-detail';
 

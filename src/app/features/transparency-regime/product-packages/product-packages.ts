@@ -1,31 +1,37 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { inject, signal, computed } from '@angular/core';
 
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
 import { IProductPackage } from '../../../models/interfaces/itransparency';
+import { PaginationStateManager } from '../../../shared/utils/pagination-state-manager.util';
+import { Paginator } from '../../../shared/components/paginator/paginator';
 
 @Component({
   selector: 'app-product-packages',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, Paginator],
   templateUrl: './product-packages.html',
   styleUrl: './product-packages.scss',
 })
 export class ProductPackages implements OnInit {
 
-  private transparencyService = inject(TransparencyService);
+  itemsPerPage = 6;
 
-  // Search signals
-  searchTerm = signal<string>('');
-  currentPage = signal<number>(1);
-
+  // State signals
   packages = signal<IProductPackage[]>([]);
   isLoading = signal<boolean>(true);
-
   errorMessage = signal<string | null>(null);
 
-  readonly itemsPerPage = 6;
+  // Filter
+  searchTerm = signal<string>('');
+
+  constructor(private transparencyService: TransparencyService) {
+    effect(() => {
+      this.pager.updateData(this.filteredPackages());
+    });
+  }
+
+  pager = new PaginationStateManager<IProductPackage>(this.itemsPerPage);
 
   // Computed signal that filters packages based on the search term.
   // It checks if the search term is included in either the descripcionEntidad or nombreCompleto fields of the package.
@@ -42,40 +48,6 @@ export class ProductPackages implements OnInit {
 
       return entidad.includes(term) || nombre.includes(term) || segmento.includes(term);
     });
-  });
-
-  // Paginate the filtered results
-  paginatedPackages = computed(() => {
-    const startIndex = (this.currentPage() - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    
-    return this.filteredPackages().slice(startIndex, endIndex);
-  });
-
-  // Calc total pages based on filtered results
-  totalPages = computed(() => {
-    return Math.ceil(this.filteredPackages().length / this.itemsPerPage);
-  });
-
-  // Generate an array of page numbers for pagination controls
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const maxVisible = 5; // Cantidad máxima de números a mostrar
-
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(total, start + maxVisible - 1);
-
-    // Adjust start if we are near the end
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
   });
 
   ngOnInit(): void {
@@ -108,17 +80,5 @@ export class ProductPackages implements OnInit {
   onSearch(event: Event): void {
     const element = event.target as HTMLInputElement;
     this.searchTerm.set(element.value);
-    this.currentPage.set(1);
-  }
-
-  /**
-   * Navigates to a specific page.
-   * @param page The page number to navigate to.
-   * @return void. Updates the currentPage signal to the specified page number if it's within valid range.
-   */
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
   }
 }

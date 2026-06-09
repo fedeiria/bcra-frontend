@@ -1,25 +1,36 @@
-import { Component, inject, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, effect } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
 import { ISavingsAccount } from '../../../models/interfaces/itransparency';
+import { PaginationStateManager } from '../../../shared/utils/pagination-state-manager.util';
+import { Paginator } from '../../../shared/components/paginator/paginator';
 
 @Component({
   selector: 'app-savings-accounts',
-  imports: [DatePipe],
+  imports: [DatePipe, Paginator],
   templateUrl: './savings-accounts.html',
   styleUrl: './savings-accounts.scss',
 })
 export class SavingsAccounts implements OnInit {
 
-  accounts = signal<ISavingsAccount[]>([]);
-  searchTerm = signal('');
-  currentPage = signal(1);
   itemsPerPage = 10;
+
+  // State signals
   isLoading = signal(true);
+  accounts = signal<ISavingsAccount[]>([]);
   errorMessage = signal<string | null>(null);
 
-  private transparencyService = inject(TransparencyService);
+  // Filter
+  searchTerm = signal<string>('');
+
+  constructor(private transparencyService: TransparencyService) {
+    effect(() => {
+      this.pager.updateData(this.filteredAccounts());
+    });
+  }
+
+  pager = new PaginationStateManager<ISavingsAccount>(this.itemsPerPage);
 
   ngOnInit(): void {
     this.loadData();
@@ -30,7 +41,7 @@ export class SavingsAccounts implements OnInit {
    * Handles loading state and error messages based on the success or failure of the data retrieval.
    * @returns void. Updates the accounts signal with the retrieved data, sets isLoading to false, and handles any errors by setting an appropriate error message.
    */
-  loadData() {
+  loadData(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
@@ -64,31 +75,13 @@ export class SavingsAccounts implements OnInit {
     );
   });
 
-  totalPages = computed(() => Math.ceil(this.filteredAccounts().length / this.itemsPerPage));
-
-  paginatedAccounts = computed(() => {
-    const start = (this.currentPage() - 1) * this.itemsPerPage;
-    return this.filteredAccounts().slice(start, start + this.itemsPerPage);
-  });
-
   /**
    * Handles the search input event and updates the search term.
    * @param event The input event from the search field. The value of the input is used to filter the packages.
    * @returns void.
    */
-  onSearch(event: Event) {
-    this.searchTerm.set((event.target as HTMLInputElement).value);
-    this.currentPage.set(1);
-  }
-
-  /**
-   * Navigates to a specific page.
-   * @param page The page number to navigate to.
-   * @return void. Updates the currentPage signal to the specified page number if it's within valid range.
-   */
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
+  onSearch(event: Event): void {
+    const element = event.target as HTMLInputElement;
+    this.searchTerm.set(element.value);
   }
 }

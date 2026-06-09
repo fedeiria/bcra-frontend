@@ -1,25 +1,36 @@
-import { Component, inject, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, effect } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 
 import { IFixedTerm } from '../../../models/interfaces/itransparency';
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
+import { PaginationStateManager } from '../../../shared/utils/pagination-state-manager.util';
+import { Paginator } from '../../../shared/components/paginator/paginator';
 
 @Component({
   selector: 'app-fixed-terms',
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, Paginator],
   templateUrl: './fixed-terms.html',
   styleUrl: './fixed-terms.scss',
 })
 export class FixedTerms implements OnInit {
 
-  fixedTerms = signal<IFixedTerm[]>([]);
-  searchTerm = signal('');
-  currentPage = signal(1);
   itemsPerPage = 10;
+
+  // State signals
+  fixedTerms = signal<IFixedTerm[]>([]);
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
 
-  private transparencyService = inject(TransparencyService);
+  // Filter
+  searchTerm = signal<string>('');
+
+  constructor(private transparencyService: TransparencyService) {
+    effect(() => {
+      this.pager.updateData(this.filteredTerms());
+    });
+  }
+
+  pager = new PaginationStateManager<IFixedTerm>(this.itemsPerPage);
 
   ngOnInit(): void {
     this.loadData();
@@ -69,53 +80,13 @@ export class FixedTerms implements OnInit {
     });
   });
 
-  // Pagination logic
-  totalPages = computed(() => Math.ceil(this.filteredTerms().length / this.itemsPerPage));
-
-  // Generate page numbers for pagination controls
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const maxVisible = 5;
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(total, start + maxVisible - 1);
-
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    const pages = [];
-    for (let i = start; i <= end; i++) { pages.push(i); }
-    return pages;
-  });
-
-  // Filter paginated results
-  paginatedTerms = computed(() => {
-    const startIndex = (this.currentPage() - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-
-    return this.filteredTerms().slice(startIndex, endIndex);
-  });
-
   /**
    * Handles the search input event and updates the search term.
    * @param event The input event from the search field. The value of the input is used to filter the packages.
    * @returns void.
    */
-  onSearch(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchTerm.set(value);
-    this.currentPage.set(1);
-  }
-
-  /**
-   * Navigates to a specific page.
-   * @param page The page number to navigate to.
-   * @return void. Updates the currentPage signal to the specified page number if it's within valid range.
-   */
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
+  onSearch(event: Event): void {
+    const element = event.target as HTMLInputElement;
+    this.searchTerm.set(element.value);
   }
 }

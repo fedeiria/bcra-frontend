@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
 import { ICreditSummary } from '../../../../models/interfaces/icredit-summary';
-import { getSituationClass, getSituationLabel } from '../../../../shared/utils/credit-formatters';
+import { getSituationClass, getSituationLabel } from '../../../../shared/utils/credit-formatters.util';
 
 @Component({
   selector: 'app-metric-cards',

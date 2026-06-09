@@ -5,8 +5,8 @@ import { Chart, registerables } from 'chart.js';
 import { IHistoricalItem } from '../../../../models/interfaces/ihistorical-item';
 import { ExportService } from '../../../../core/services/export/export-service';
 
-import { formatPeriod } from '../../../../shared/utils/date-formatters';
-import { getSituationClass, getSituationLabel } from '../../../../shared/utils/credit-formatters';
+import { formatPeriod } from '../../../../shared/utils/date-formatters.util';
+import { getSituationClass, getSituationLabel } from '../../../../shared/utils/credit-formatters.util';
 
 Chart.register(...registerables);
 
