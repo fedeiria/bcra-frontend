@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { CheckService } from '../../core/services/check/check-service';
 import { IBankEntity } from '../../models/interfaces/ibank-entity';
@@ -8,7 +9,7 @@ import { IReportedCheck } from '../../models/interfaces/ireportedcheck';
 
 import { Header } from "../../shared/components/header/header";
 import { Footer } from '../../shared/components/footer/footer';
-import { ExportService } from '../../core/services/export/export-service';
+import { ExportService } from '../../core/services/export-data/export-service';
 
 @Component({
   selector: 'app-check-verification',
@@ -41,6 +42,19 @@ export class CheckVerification implements OnInit {
   }
 
   /**
+   * Helper to handle http Error messages.
+   * @param err Error response.
+   * @param defaultMsg Default message.
+   * @returns String with the error message.
+   */
+  private extractErrorMessage(err: HttpErrorResponse, defaultMsg: string): string {
+    const backendMsg = err.error?.message;
+    if (!backendMsg) return defaultMsg;
+    
+    return Array.isArray(backendMsg) ? backendMsg[0] : backendMsg;
+  }
+
+  /**
    * Load the list of entities when initializing the component.
    * @returns void.
    */
@@ -49,24 +63,21 @@ export class CheckVerification implements OnInit {
     this.loadingBanks = true;
 
     this.checkService.getBankingEntities().subscribe({
-      next: (res) => {
-        if (!res.error && res.data) {
-          this.banks = res.data;
-        }
-        else {
-          this.errorMessage.set('No se pudo cargar la lista de bancos.');
-        }
+      next: (bancos) => {
+        this.banks = bancos;
         this.loadingBanks = false;
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         if (!navigator.onLine) {
           this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
         }
         else {
-          this.errorMessage.set('Se produjo un error al intentar obtener las entidades bancarias. Por favor, inténtelo de nuevo más tarde.');
+          const msg = this.extractErrorMessage(err, 'Se produjo un error al obtener las entidades bancarias.');
+          this.errorMessage.set(msg);
         }
+
         this.loadingBanks = false;
-        console.error('credit-cards.ts: ', err);
+        console.error('Error cargando bancos: ', err);
       }
     });
   }
@@ -86,19 +97,15 @@ export class CheckVerification implements OnInit {
     this.result = null;
 
     this.checkService.searchCheck(this.selectedBankCode, this.checkNumber).subscribe({
-      next: (res) => {
-        if (!res.error && res.data) {
-          this.result = res.data;
-          this.lastQueriedNumber = this.checkNumber;
-          this.checkNumber = '';
-        }
-        else {
-          this.errorMessage.set(res.message || 'Error al consultar el cheque.');
-        }
+      next: (checkData) => {
+        this.result = checkData;
+        this.lastQueriedNumber = this.checkNumber;
+        this.checkNumber = '';
         this.loadingQuery = false;
       },
-      error: () => {
-        this.errorMessage.set('Error de comunicación con el servidor.');
+      error: (err: HttpErrorResponse) => {
+        const msg = this.extractErrorMessage(err, 'Error al consultar el cheque.');
+        this.errorMessage.set(msg);
         this.loadingQuery = false;
       }
     });

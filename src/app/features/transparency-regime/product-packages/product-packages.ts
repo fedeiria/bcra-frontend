@@ -1,5 +1,8 @@
-import { Component, OnInit, signal, computed, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, computed, effect, inject } from '@angular/core';
+import { CurrencyPipe, TitleCasePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
 import { IProductPackage } from '../../../models/interfaces/itransparency';
@@ -9,13 +12,13 @@ import { Paginator } from '../../../shared/components/paginator/paginator';
 @Component({
   selector: 'app-product-packages',
   standalone: true,
-  imports: [CommonModule, Paginator],
+  imports: [CurrencyPipe, FormsModule, Paginator, TitleCasePipe],
   templateUrl: './product-packages.html',
   styleUrl: './product-packages.scss',
 })
 export class ProductPackages implements OnInit {
-
-  itemsPerPage = 6;
+  private readonly transparencyService = inject(TransparencyService);
+  readonly itemsPerPage = 6;
 
   // State signals
   packages = signal<IProductPackage[]>([]);
@@ -25,7 +28,7 @@ export class ProductPackages implements OnInit {
   // Filter
   searchTerm = signal<string>('');
 
-  constructor(private transparencyService: TransparencyService) {
+  constructor() {
     effect(() => {
       this.pager.updateData(this.filteredPackages());
     });
@@ -50,35 +53,48 @@ export class ProductPackages implements OnInit {
     });
   });
 
-  ngOnInit(): void {
-    this.errorMessage.set(null);
-    this.isLoading.set(true);
-
-    this.transparencyService.getPackages().subscribe({
-      next: (data) => {
-        this.packages.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        if (!navigator.onLine) {
-          this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
-        }
-        else {
-          this.errorMessage.set('Se produjo un error al intentar cargar los datos de paquetes de productos. Por favor, inténtelo de nuevo más tarde.');
-        }
-        this.isLoading.set(false);
-        console.error('product-packages.ts: ', err);
-      }
-    });
+  async ngOnInit(): Promise<void> {
+    await this.loadData();
   }
 
   /**
-   * Handles the search input event and updates the search term.
-   * @param event The input event from the search field. The value of the input is used to filter the packages.
+   * Loads mortgage loans data from the TransparencyService and updates the component state accordingly.
+   * Handles loading state and error messages based on the success or failure of the data retrieval.
+   * @returns Promise<void>. Updates the fixedTerms signal with the retrieved data, sets isLoading to false, and handles any errors by setting an appropriate error message.
+   */
+  async loadData(): Promise<void> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    try {
+      const response = await firstValueFrom(this.transparencyService.getPackages());
+      const safeData = Array.isArray(response) ? response : (response as any)?.results || [];
+      this.packages.set(safeData);
+    }
+    catch (error: unknown) {
+      this.handleHttpError(error);
+    }
+    finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Handle HTTP errors.
+   * @param error The error to handle.
    * @returns void.
    */
-  onSearch(event: Event): void {
-    const element = event.target as HTMLInputElement;
-    this.searchTerm.set(element.value);
+  private handleHttpError(error: unknown): void {
+    if (!navigator.onLine) {
+      this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
+      return;
+    }
+
+    if (error instanceof HttpErrorResponse) {
+      this.errorMessage.set(error.error?.message || 'Se produjo un error al intentar cargar los datos de los paquetes de productos.');
+    }
+    else {
+      this.errorMessage.set('Se produjo un error inesperado. Por favor, inténtelo de nuevo más tarde.');
+    }
   }
 }

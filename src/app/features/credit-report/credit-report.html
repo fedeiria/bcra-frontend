@@ -15,11 +15,12 @@
                 <div class="row align-items-start g-3">
                     <div class="col-md-8 col-lg-6">
                         <input type="text" class="form-control form-control-custom" inputmode="numeric" placeholder="Ej: 20123456789" maxlength="59"
-                            [(ngModel)]="cuit"
-                            (input)="onCuitInput($event)"
-                            [class.is-invalid]="cuit && !isValidCuit()" />
+                            [ngModel]="cuit()"
+                            (ngModelChange)="onCuitChange($event)"
+                            (keydown.enter)="consult()"
+                            [class.is-invalid]="cuit() && !isValidCuit()" />
 
-                        @if (cuit && !isValidCuit()) {
+                        @if (cuit() && !isValidCuit()) {
                             <div class="invalid-feedback d-block mt-2 font-monospace small" role="alert">
                                 ⚠️ El CUIT debe contener exactamente 11 dígitos numéricos por cada entrada.
                             </div>
@@ -28,8 +29,8 @@
 
                     <div class="col-md-4 col-lg-3">
                         <button class="btn btn-primary btn-search w-100 d-flex align-items-center justify-content-center gap-2"
-                            (click)="consult()" [disabled]="loading || !isValidCuit()">
-                            @if (loading) {
+                            (click)="consult()" [disabled]="loading() || !isValidCuit()">
+                            @if (loading()) {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Consultando...</span>
                             }
@@ -43,24 +44,24 @@
             </div>
         </div>
 
-        @if (errorMessage) {
+        @if (errorMessage()) {
             <div class="alert d-flex align-items-center gap-3 p-3 mb-4 border-start border-4 shadow-sm"
-                [ngClass]="{'alert-warning border-warning bg-warning-subtle text-warning-emphasis': errorType === 'warning', 'alert-danger border-danger bg-danger-subtle text-danger-emphasis': errorType === 'danger'}">
-                <i class="bi" [ngClass]="errorType === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-cloud-slash-fill'"></i>
+                [ngClass]="{'alert-warning border-warning bg-warning-subtle text-warning-emphasis': errorType() === 'warning', 'alert-danger border-danger bg-danger-subtle text-danger-emphasis': errorType() === 'danger'}">
+                <i class="bi" [ngClass]="errorType() === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-cloud-slash-fill'"></i>
                 <div class="d-flex flex-column">
-                    <strong class="fs-6">{{ errorType === 'warning' ? 'Aviso de Consulta' : 'Falla del Servidor' }}</strong>
-                    <span class="small">{{ errorMessage }}</span>
+                    <strong class="fs-6">{{ errorType() === 'warning' ? 'Aviso de Consulta' : 'Falla del Servidor' }}</strong>
+                    <span class="small">{{ errorMessage() }}</span>
                 </div>
             </div>
         }
 
-        @if (loading) {
+        @if (loading()) {
             <div class="d-flex justify-content-center my-5">
                 <app-spinner message="Conectando de forma segura con Central de Deudores BCRA..."></app-spinner>
             </div>
         }
 
-        @if (!loading && !result && resultsArray.length === 0 && !errorMessage) {
+        @if (!loading() && !result() && resultsArray().length === 0 && !errorMessage()) {
             <div class="empty-state-box text-center shadow-sm mt-4">
                 <i class="bi bi-person-badge fs-1 text-secondary opacity-50 d-block mb-3"></i>
                 <h5 class="fw-bold text-secondary">Esperando consulta de CUIT</h5>
@@ -68,21 +69,23 @@
             </div>
         }
 
-        @if (!isBatchMode && result) {
-            <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
-                <div class="card-body bg-white p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                    <div>
-                        <span class="badge bg-secondary-subtle text-secondary fw-semibold mb-1 text-uppercase tracking-wider" style="font-size: 0.75rem;">Razón Social / Denominación</span>
-                        <h4 class="fw-bold text-dark m-0">{{ result.denominacion }}</h4>
+        @if (!isBatchMode()) {
+            @if (result(); as res) {
+                <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
+                    <div class="card-body bg-white p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div>
+                            <span class="badge bg-secondary-subtle text-secondary fw-semibold mb-1 text-uppercase tracking-wider" style="font-size: 0.75rem;">Razón Social / Denominación</span>
+                            <h4 class="fw-bold text-dark m-0">{{ res.denominacion }}</h4>
+                        </div>
+                        <span class="badge bg-dark fs-6 font-monospace px-3 py-2">CUIT: {{ res.cuit }}</span>
                     </div>
-                    <span class="badge bg-dark fs-6 font-monospace px-3 py-2">CUIT: {{ result.cuit }}</span>
                 </div>
-            </div>
 
-            <ng-container *ngTemplateOutlet="detailedInfo; context: { $implicit: result, itemRef: { historicalData: historicalData, loadingHistory: false } }"></ng-container>
+                <ng-container *ngTemplateOutlet="detailedInfo; context: { $implicit: res, itemRef: { historicalData: historicalData(), loadingHistory: false } }"></ng-container>
+            }
         }
 
-        @if (isBatchMode && resultsArray.length > 0) {
+        @if (isBatchMode() && resultsArray().length > 0) {
             <div class="card shadow-sm border-0 mt-4 overflow-hidden">
                 <div class="card-header bg-light border-0 py-3">
                     <h5 class="mb-0 fw-bold text-secondary">
@@ -100,7 +103,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @for (item of resultsArray; track item.cuit) {
+                            @for (item of resultsArray(); track item.cuit) {
                                 <tr>
                                     <td class="ps-4 fw-bold font-monospace">{{ item.cuit }}</td>
                                     <td>{{ item.data?.denominacion || '-' }}</td>
@@ -119,7 +122,7 @@
                                     <td class="text-center">
 
                                         @if (item.success) {
-                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" (click)="toggleDetail(item)">
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" (click)="toggleDetail(item.cuit)">
                                                 <i class="bi" [ngClass]="item.showDetail ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                                                 {{ item.showDetail ? 'Ocultar' : 'Ver detalle' }}
                                             </button>

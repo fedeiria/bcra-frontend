@@ -1,40 +1,50 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
 import { MonetaryService } from '../../core/services/monetary/monetary-service';
-import { IMonetaryVariable, IMonetaryApiResponse, IMonetaryHistoryItem, IMonetaryHistoryResult, IMonetaryMethodology } from '../../models/interfaces/imonetary';
+import { IMonetaryVariable, IMonetaryHistoryItem, IMonetaryHistoryResult, IMonetaryMethodology } from '../../models/interfaces/imonetary';
 import { MONETARY_UI_CONFIG } from '../../models/constants/monetary';
 
 import { Header } from '../../shared/components/header/header';
 import { Footer } from '../../shared/components/footer/footer';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-monetary-variables',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header, Footer],
+  imports: [DatePipe, DecimalPipe, FormsModule, Header, Footer, NgClass],
   templateUrl: './monetary-variables.html',
   styleUrl: './monetary-variables.scss'
 })
 export class MonetaryVariables implements OnInit {
-  private monetaryService = inject(MonetaryService);
+  
+  private readonly monetaryService = inject(MonetaryService);
+  private readonly uiConfig = MONETARY_UI_CONFIG;
 
-  loading: boolean = true;
-  loadingHistory: boolean = false;
-  alreadySearched: boolean = false;
-
+  // Signal states
+  loading = signal<boolean>(true);
+  loadingHistory = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
-  private variables: IMonetaryVariable[] = [];
-  selectedVariable: IMonetaryVariable | null = null;
-  historyData: IMonetaryHistoryItem[] = [];
+  variables = signal<IMonetaryVariable[]>([]);
+  selectedVariable = signal<IMonetaryVariable | null>(null);
+  historyData = signal<IMonetaryHistoryItem[]>([]);
+  searchTerm = signal<string>('');
 
-  private uiConfig = MONETARY_UI_CONFIG;
+  // Signal computed
+  filteredVariables = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const allVars = this.variables();
 
-  // Search term for filtering variables
-  searchTerm: string = '';
-  filteredVariables: IMonetaryVariable[] = [];
+    if (!term) return allVars;
+
+    return allVars.filter(v =>
+      (v.descripcion || '').toLowerCase().includes(term) ||
+      (v.categoria || '').toLowerCase().includes(term)
+    );
+  });
 
   async ngOnInit() {
     await this.loadInitialData();
@@ -45,35 +55,33 @@ export class MonetaryVariables implements OnInit {
    * @returns A promise that resolves when the data has been loaded and processed.
    */
   private async loadInitialData(): Promise<void> {
-    this.loading = true;
+    this.loading.set(true);
     this.errorMessage.set(null);
     
     try {
-      const [variablesRes, methodologiesRes] = await Promise.all([
-        firstValueFrom(this.monetaryService.getVariables()) as Promise<IMonetaryApiResponse<IMonetaryVariable[]>>,
-        firstValueFrom(this.monetaryService.getMethodologies()) as Promise<IMonetaryApiResponse<IMonetaryMethodology[]>>
+      const [variablesList, methodologiesList] = await Promise.all([
+        firstValueFrom(this.monetaryService.getVariables()),
+        firstValueFrom(this.monetaryService.getMethodologies())
       ]);
 
-      if (!variablesRes.error && !methodologiesRes.error) {
-        const variablesList = variablesRes.data || [];
-        const methodologiesList = methodologiesRes.data || [];
-        
-        this.variables = variablesList.map(v => {
-          const met = methodologiesList.find(m => m.id === v.idVariable);
-          return { 
-            ...v, 
-            metodologia: met ? met.detalle : 'Sin descripción disponible.' 
-          };
-        });
+      // Mapeamos defensivamente por si el backend nos enviara la data anidada accidentalmente
+      const safeVariables = Array.isArray(variablesList) ? variablesList : (variablesList as any)?.results || [];
+      const safeMethodologies = Array.isArray(methodologiesList) ? methodologiesList : (methodologiesList as any)?.results || [];
+      
+      const mergedVariables = safeVariables.map((v: IMonetaryVariable) => {
+        const met = safeMethodologies.find((m: IMonetaryMethodology) => m.id === v.idVariable);
+        return { 
+          ...v, metodologia: met ? met.detalle : 'Sin descripción disponible.' 
+        };
+      });
 
-        this.filteredVariables = [...this.variables];
-      }
+      this.variables.set(mergedVariables);
     }
-    catch (error) {
-      this.errorMessage.set('No se pudo conectar con el servidor para obtener las variables monetarias.');
+    catch (error: unknown) {
+      this.handleHttpError(error, 'No se pudo conectar con el servidor para obtener las variables monetarias.');
     }
     finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
@@ -83,52 +91,38 @@ export class MonetaryVariables implements OnInit {
    * @returns A promise that resolves when the history data has been loaded.
    */
   async viewHistory(variable: IMonetaryVariable): Promise<void> {
-    this.selectedVariable = variable;
+    this.selectedVariable.set(variable);
     this.errorMessage.set(null);
-    this.loadingHistory = true;
+    this.loadingHistory.set(true);
     
-    const hoy = new Date();
-    const haceUnMes = new Date(hoy);
-    haceUnMes.setMonth(hoy.getMonth() - 1);
+    const today = new Date();
+    const aMonthAgo = new Date(today);
+    aMonthAgo.setMonth(today.getMonth() - 1);
     
-    const hasta = hoy.toISOString().split('T')[0];
-    const desde = haceUnMes.toISOString().split('T')[0];
+    const to = today.toISOString().split('T')[0];
+    const from = aMonthAgo.toISOString().split('T')[0];
 
     try {
-      const res = await firstValueFrom(this.monetaryService.getVariableHistory(variable.idVariable, desde, hasta)) as IMonetaryApiResponse<IMonetaryHistoryResult[]>;
+      const response = await firstValueFrom(
+        this.monetaryService.getVariableHistory(variable.idVariable, from, to)
+      );
       
-      if (!res.error && res.data && res.data.length > 0) {
-        this.historyData = res.data[0].detalle;
+      const resultsArray: IMonetaryHistoryResult[] = Array.isArray(response) ? response : (response as any)?.results || [];
+      
+      if (resultsArray.length > 0 && resultsArray[0].detalle) {
+        this.historyData.set(resultsArray[0].detalle);
       }
       else {
-        this.historyData = [];
+        this.historyData.set([]);
       }
     }
-    catch (error) {
-      this.errorMessage.set('Error cargando historial.');
-      this.historyData = [];
+    catch (error: unknown) {
+      this.handleHttpError(error, 'Error cargando historial de la variable.');
+      this.historyData.set([]);
     }
     finally {
-      this.loadingHistory = false;
+      this.loadingHistory.set(false);
     }
-  }
-
-  /**
-   * Filters the monetary variables based on the search term.
-   * @returns void.
-   */
-  filterVariables(): void {
-    const term = this.searchTerm.toLowerCase().trim();
-
-    if (!term) {
-      this.filteredVariables = [...this.variables];
-      return;
-    }
-
-    this.filteredVariables = this.variables.filter(v =>
-      (v.descripcion || '').toLowerCase().includes(term) ||
-      (v.categoria || '').toLowerCase().includes(term)
-    );
   }
 
   /**
@@ -147,5 +141,19 @@ export class MonetaryVariables implements OnInit {
    */
   getColorFor(id: number): string {
     return this.uiConfig[id]?.colorClass || this.uiConfig['default'].colorClass;
+  }
+
+  /**
+   * Handle HTTP errors.
+   * @param error Error to handle.
+   * @param defaultMsg The message to show.
+   */
+  private handleHttpError(error: unknown, defaultMsg: string): void {
+    if (error instanceof HttpErrorResponse) {
+      this.errorMessage.set(error.error?.message || defaultMsg);
+    }
+    else {
+      this.errorMessage.set(defaultMsg);
+    }
   }
 }

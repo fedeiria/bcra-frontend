@@ -1,5 +1,8 @@
-import { Component, OnInit, computed, signal, effect } from '@angular/core';
+import { Component, OnInit, computed, signal, effect, inject } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 import { IFixedTerm } from '../../../models/interfaces/itransparency';
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
@@ -8,13 +11,14 @@ import { Paginator } from '../../../shared/components/paginator/paginator';
 
 @Component({
   selector: 'app-fixed-terms',
-  imports: [CurrencyPipe, DatePipe, Paginator],
+  standalone: true,
+  imports: [CurrencyPipe, DatePipe, FormsModule, Paginator],
   templateUrl: './fixed-terms.html',
   styleUrl: './fixed-terms.scss',
 })
 export class FixedTerms implements OnInit {
-
-  itemsPerPage = 10;
+  private readonly transparencyService = inject(TransparencyService);
+  readonly itemsPerPage = 10;
 
   // State signals
   fixedTerms = signal<IFixedTerm[]>([]);
@@ -24,44 +28,13 @@ export class FixedTerms implements OnInit {
   // Filter
   searchTerm = signal<string>('');
 
-  constructor(private transparencyService: TransparencyService) {
+  constructor() {
     effect(() => {
       this.pager.updateData(this.filteredTerms());
     });
   }
 
   pager = new PaginationStateManager<IFixedTerm>(this.itemsPerPage);
-
-  ngOnInit(): void {
-    this.loadData();
-  }
-
-  /**
-   * Loads fixed terms data from the TransparencyService and updates the component state accordingly.
-   * Handles loading state and error messages based on the success or failure of the data retrieval.
-   * @returns void. Updates the fixedTerms signal with the retrieved data, sets isLoading to false, and handles any errors by setting an appropriate error message.
-   */
-  loadData(): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    this.transparencyService.getFixedTerms().subscribe({
-      next: (data) => {
-        this.fixedTerms.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        if (!navigator.onLine) {
-          this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
-        }
-        else {
-          this.errorMessage.set('Se produjo un error al intentar cargar los datos de plazos fijos. Por favor, inténtelo de nuevo más tarde.');
-        }
-        this.isLoading.set(false);
-        console.error('fixed-terms.ts: ', err);
-      }
-    });
-  }
 
   // Filter logic
   filteredTerms = computed(() => {
@@ -80,13 +53,48 @@ export class FixedTerms implements OnInit {
     });
   });
 
+  async ngOnInit(): Promise<void> {
+    await this.loadData();
+  }
+
   /**
-   * Handles the search input event and updates the search term.
-   * @param event The input event from the search field. The value of the input is used to filter the packages.
+   * Loads fixed terms data from the TransparencyService and updates the component state accordingly.
+   * Handles loading state and error messages based on the success or failure of the data retrieval.
+   * @returns Promise<void>. Updates the fixedTerms signal with the retrieved data, sets isLoading to false, and handles any errors by setting an appropriate error message.
+   */
+  async loadData(): Promise<void> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    try {
+      const response = await firstValueFrom(this.transparencyService.getFixedTerms());
+      const safeData = Array.isArray(response) ? response : (response as any)?.results || [];
+      this.fixedTerms.set(safeData);
+    }
+    catch (error: unknown) {
+      this.handleHttpError(error);
+    }
+    finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Handle HTTP errors.
+   * @param error The error to handle.
    * @returns void.
    */
-  onSearch(event: Event): void {
-    const element = event.target as HTMLInputElement;
-    this.searchTerm.set(element.value);
+  private handleHttpError(error: unknown): void {
+    if (!navigator.onLine) {
+      this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
+      return;
+    }
+
+    if (error instanceof HttpErrorResponse) {
+      this.errorMessage.set(error.error?.message || 'Se produjo un error al intentar cargar los datos de plazos fijos.');
+    }
+    else {
+      this.errorMessage.set('Se produjo un error inesperado. Por favor, inténtelo de nuevo más tarde.');
+    }
   }
 }

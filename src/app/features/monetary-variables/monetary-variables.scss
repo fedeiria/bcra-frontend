@@ -113,6 +113,12 @@ $accent-gold: #f59f00;
     animation: fadeIn 0.3s ease-in;
 }
 
+.search-input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #dee2e6 !important;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

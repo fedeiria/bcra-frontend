@@ -6,8 +6,9 @@ export interface IBatchItem {
     denominacion?: string;
     success: boolean;
     data: ICreditSummary | null;
-    errorMessage?: string | null;
+    errorMessage: string | null;
     showDetail: boolean;
-    loadingHistory?: boolean;
-    historicalData?: IHistoricalItem[];
+    loadingHistory: boolean;
+    historicalData: IHistoricalItem[];
+    historyError: string | null;
 }

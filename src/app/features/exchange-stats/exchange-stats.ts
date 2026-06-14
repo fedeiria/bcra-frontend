@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -7,6 +7,7 @@ import { ExchangeService } from '../../core/services/exchange/exchange-service';
 import { ICurrency, IRatesResponse } from '../../models/interfaces/iexchange';
 import { Header } from "../../shared/components/header/header";
 import { Footer } from "../../shared/components/footer/footer";
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-exchange-stats',
@@ -16,19 +17,19 @@ import { Footer } from "../../shared/components/footer/footer";
   styleUrl: './exchange-stats.scss',
 })
 export class ExchangeStats implements OnInit {
-  currencies: ICurrency[] = [];
-  evolutionData: IRatesResponse[] = [];
+  // Signal states
+  currencies = signal<ICurrency[]>([]);
+  evolutionData = signal<IRatesResponse[]>([]);
 
-  selectedCurrency: string = '';
-  fromDate: string = '';
-  toDate: string = '';
+  selectedCurrency = signal<string>('');
+  fromDate = signal<string>('');
+  toDate = signal<string>('');
 
-  loading: boolean = false;
-  alreadySearched: boolean = false;
-
+  loading = signal<boolean>(false);
+  alreadySearched = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
-  constructor(private exchangeService: ExchangeService) { }
+  private readonly exchangeService = inject(ExchangeService);
 
   ngOnInit(): void {
     this.loadExchangeList();
@@ -40,17 +41,11 @@ export class ExchangeStats implements OnInit {
    */
   async loadExchangeList(): Promise<void> {
     try {
-      const res = await firstValueFrom(this.exchangeService.getCurrencies());
-      
-      if (!res.error) {
-        this.currencies = res.data;
-      }
-      else {
-        this.errorMessage.set(res.message || 'Error al cargar el listado de monedas.');
-      }
+      const currencies = await firstValueFrom(this.exchangeService.getCurrencies());
+      this.currencies.set(currencies);
     }
-    catch (error) {
-      this.errorMessage.set('No se pudo conectar con el servidor para obtener las estadisticas cambiarias.');
+    catch (error: unknown) {
+      this.handleHttpError(error, 'No se pudo conectar con el servidor para obtener las monedas.');
     }
   }
 
@@ -59,31 +54,41 @@ export class ExchangeStats implements OnInit {
    * @returns A Promise that resolves when the data is loaded and the component state is updated.
    */
   async checkCurrencyEvolution(): Promise<void> {
-    if (!this.selectedCurrency) return;
+    if (!this.selectedCurrency()) return;
 
-    this.loading = true;
-    this.alreadySearched = true;
+    this.loading.set(true);
+    this.alreadySearched.set(true);
     this.errorMessage.set(null);
-    this.evolutionData = [];
+    this.evolutionData.set([]);
 
     try {
-      const res = await firstValueFrom(
-        this.exchangeService.getCurrencyEvolution(this.selectedCurrency, this.fromDate, this.toDate)
+      const response = await firstValueFrom(
+        this.exchangeService.getCurrencyEvolution(this.selectedCurrency(), this.fromDate(), this.toDate())
       );
 
-      if (!res.error) {
-        this.evolutionData = res.data.results;
-        this.alreadySearched = true;
-      }
-      else {
-        this.errorMessage.set(res.message || 'Error al procesar la consulta.');
-      }
+      const dataArray = response?.results || [];
+      this.evolutionData.set(dataArray);
     }
-    catch (error) {
-      this.errorMessage.set('Ocurrió un error inesperado al consultar las estadísticas.');
+    catch (error: unknown) {
+      this.handleHttpError(error, 'Ocurrió un error inesperado al consultar las estadísticas.');
     }
     finally {
-      this.loading = false;
+      this.loading.set(false);
+    }
+  }
+
+  /**
+   * Handle HTTP error messages.
+   * @param error Error to handle. 
+   * @param defaultMsg The message to show.
+   * @returns void.
+   */
+  private handleHttpError(error: unknown, defaultMsg: string): void {
+    if (error instanceof HttpErrorResponse) {
+      this.errorMessage.set(error.error?.message || defaultMsg);
+    }
+    else {
+      this.errorMessage.set(defaultMsg);
     }
   }
 }

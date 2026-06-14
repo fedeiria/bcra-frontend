@@ -1,14 +1,3 @@
-// Response from BCRA API for variables and methodologies
-export interface IMonetaryApiResponse<T> {
-    error: boolean;
-    data: T;
-    metadata?: {
-        count: number;
-        offset: number;
-        limit: number;
-    };
-}
-
 // Represent a monetary variable with its details and associated methodology
 export interface IMonetaryVariable {
     idVariable: number;

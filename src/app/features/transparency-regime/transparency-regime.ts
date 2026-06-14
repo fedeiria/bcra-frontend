@@ -7,6 +7,7 @@ import { Footer } from "../../shared/components/footer/footer";
 
 @Component({
   selector: 'app-transparency-regime',
+  standalone: true,
   imports: [CommonModule, RouterModule, Header, Footer],
   templateUrl: './transparency-regime.html',
   styleUrl: './transparency-regime.scss',

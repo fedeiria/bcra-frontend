@@ -1,5 +1,8 @@
-import { Component, OnInit, computed, signal, effect } from '@angular/core';
+import { Component, OnInit, computed, signal, effect, inject } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 import { TransparencyService } from '../../../core/services/transparency/transparency-service';
 import { IMortgageLoan } from '../../../models/interfaces/itransparency';
@@ -8,13 +11,14 @@ import { Paginator } from '../../../shared/components/paginator/paginator';
 
 @Component({
   selector: 'app-mortgage-loans',
-  imports: [CurrencyPipe, Paginator],
+  standalone: true,
+  imports: [CurrencyPipe, FormsModule, Paginator],
   templateUrl: './mortgage-loans.html',
   styleUrl: './mortgage-loans.scss',
 })
 export class MortgageLoans implements OnInit {
-
-  itemsPerPage = 6;
+  private readonly transparencyService = inject(TransparencyService);
+  readonly itemsPerPage = 6;
 
   // State signals
   loans = signal<IMortgageLoan[]>([]);
@@ -26,35 +30,13 @@ export class MortgageLoans implements OnInit {
 
   selectedLoan = signal<IMortgageLoan | null>(null);
 
-  constructor(private transparencyService: TransparencyService) {
+  constructor() {
     effect(() => {
       this.pager.updateData(this.filteredLoans());
     });
   }
 
   pager = new PaginationStateManager<IMortgageLoan>(this.itemsPerPage);
-
-  ngOnInit(): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    this.transparencyService.getMortgageLoans().subscribe({
-      next: (data) => {
-        this.loans.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        if (!navigator.onLine) {
-          this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
-        }
-        else {
-          this.errorMessage.set('Se produjo un error al intentar cargar los datos de créditos hipotecarios. Por favor, inténtelo de nuevo más tarde.');
-        }
-        this.isLoading.set(false);
-        console.error('mortgage-loans.ts: ', err);
-      }
-    });
-  }
 
   // Filter logic
   filteredLoans = computed(() => {
@@ -71,14 +53,49 @@ export class MortgageLoans implements OnInit {
     });
   });
 
+  async ngOnInit(): Promise<void> {
+    await this.loadData();
+  }
+
   /**
-   * Handles the search input event and updates the search term.
-   * @param event The input event from the search field. The value of the input is used to filter the packages.
+   * Loads mortgage loans data from the TransparencyService and updates the component state accordingly.
+   * Handles loading state and error messages based on the success or failure of the data retrieval.
+   * @returns Promise<void>. Updates the fixedTerms signal with the retrieved data, sets isLoading to false, and handles any errors by setting an appropriate error message.
+   */
+  async loadData(): Promise<void> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    try {
+      const response = await firstValueFrom(this.transparencyService.getMortgageLoans());
+      const safeData = Array.isArray(response) ? response : (response as any)?.results || [];
+      this.loans.set(safeData);
+    }
+    catch (error: unknown) {
+      this.handleHttpError(error);
+    }
+    finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Handle HTTP errors.
+   * @param error The error to handle.
    * @returns void.
    */
-  onSearch(event: Event): void {
-    const element = event.target as HTMLInputElement;
-    this.searchTerm.set(element.value);
+  private handleHttpError(error: unknown): void {
+    if (!navigator.onLine) {
+      this.errorMessage.set('Parece que no tenés conexión a internet. Verificá tu red y reintentá.');
+      return;
+    }
+
+    if (error instanceof HttpErrorResponse) {
+      this.errorMessage.set(error.error?.message || 'Se produjo un error al intentar cargar los datos de créditos hipotecarios.');
+    }
+    else {
+      this.errorMessage.set('Se produjo un error inesperado. Por favor, inténtelo de nuevo más tarde.');
+    }
   }
 
   /**

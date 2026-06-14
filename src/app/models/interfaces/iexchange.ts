@@ -1,10 +1,3 @@
-// Generic interface for API responses from the exchange rate service, including an error flag, data of generic type T, and an optional message
-export interface IExchangeApiResponse<T> {
-  error: boolean;
-  data: T;
-  message?: string;
-}
-
 // Currency master data
 export interface ICurrency {
   codigo: string;

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import { convertToDateFormat } from '../../../shared/utils/date-formatters.util';
-import { IExchangeApiResponse, ICurrency, IRatesResponse, IEvolutionResponse } from '../../../models/interfaces/iexchange';
+import { ICurrency, IRatesResponse, IEvolutionResponse } from '../../../models/interfaces/iexchange';
 
 @Injectable({
   providedIn: 'root'
@@ -17,8 +17,8 @@ export class ExchangeService {
    * Get the list of available currencies.
    * @returns Observable with the list of currencies.
    */
-  getCurrencies(): Observable<IExchangeApiResponse<ICurrency[]>> {
-    return this.http.get<IExchangeApiResponse<ICurrency[]>>(`${this.API_URL}/currencies`);
+  getCurrencies(): Observable<ICurrency[]> {
+    return this.http.get<ICurrency[]>(`${this.API_URL}/currencies`);
   }
 
   /**
@@ -26,13 +26,13 @@ export class ExchangeService {
    * @param fecha Format 'yyyy-MM-dd'
    * @returns Observable with the exchange rates.
    */
-  getRatesByDate(fecha?: string): Observable<IExchangeApiResponse<IRatesResponse>> {
+  getRatesByDate(fecha?: string): Observable<IRatesResponse> {
     let params = new HttpParams();
 
     if (fecha) {
       params = params.set('fecha', fecha);
     }
-    return this.http.get<IExchangeApiResponse<IRatesResponse>>(`${this.API_URL}/rates`, { params });
+    return this.http.get<IRatesResponse>(`${this.API_URL}/rates`, { params });
   }
 
   /**
@@ -42,13 +42,12 @@ export class ExchangeService {
    * @param dateTo Format 'yyyy-MM-dd'
    * @returns Observable with the currency evolution data.
    */
-  getCurrencyEvolution(moneda: string, dateFrom?: string, dateTo?: string): Observable<IExchangeApiResponse<IEvolutionResponse>> {
+  getCurrencyEvolution(moneda: string, dateFrom?: string, dateTo?: string): Observable<IEvolutionResponse> {
     let params = new HttpParams();
 
     if (dateFrom) params = params.set('desde', convertToDateFormat(dateFrom));
     if (dateTo) params = params.set('hasta', convertToDateFormat(dateTo));
 
-    return this.http.get<IExchangeApiResponse<IEvolutionResponse>>(
-      `${this.API_URL}/evolution/${moneda}`, { params });
+    return this.http.get<IEvolutionResponse>(`${this.API_URL}/evolution/${moneda}`, { params });
   }
 }

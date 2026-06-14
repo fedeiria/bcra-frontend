@@ -36,7 +36,7 @@
                         <select id="currency" class="form-select" [(ngModel)]="selectedCurrency" name="selectedCurrency" required>
                             <option value="" disabled selected>Seleccione una moneda...</option>
 
-                            @for (currency of currencies; track currency.codigo) {
+                            @for (currency of currencies(); track currency.codigo) {
                                 <option [value]="currency.codigo">{{ currency.codigo }} - {{ currency.denominacion }}</option>
                             }
                         </select>
@@ -57,8 +57,8 @@
                     <!-- Action Button -->
                     <div class="col-md-2">
                         <button type="submit"
-                            class="btn btn-primary-bank w-100 py-2 shadow-sm d-flex justify-content-center align-items-center gap-2" [disabled]="loading || !selectedCurrency">
-                            @if (loading) {
+                            class="btn btn-primary-bank w-100 py-2 shadow-sm d-flex justify-content-center align-items-center gap-2" [disabled]="loading() || !selectedCurrency()">
+                            @if (loading()) {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Consultando...</span>
                             }
@@ -73,7 +73,7 @@
         </div>
 
         <!-- Tabla de Resultados -->
-        @if (evolutionData.length > 0) {
+        @if (evolutionData().length > 0) {
 
             <div class="card shadow-sm border-0 animate__animated animate__fadeIn">
                 <div class="card-body p-0">
@@ -89,7 +89,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (row of evolutionData; track row.fecha) {
+                                @for (row of evolutionData(); track row.fecha) {
                                     @for (det of row.detalle; track det.codigoMoneda) {
                                         <tr>
                                             <td class="ps-4 fw-semibold text-secondary">{{ row.fecha | date: 'dd/MM/yyyy' : 'UTC' }}</td>
@@ -108,7 +108,7 @@
                 </div>
             </div>
         }
-        @else if (!loading && alreadySearched) {
+        @else if (!loading() && alreadySearched()) {
             <div class="text-center py-5 my-3">
                 <div class="display-6 text-muted mb-2">
                     <i class="bi bi-exclamation-circle"></i> </div>

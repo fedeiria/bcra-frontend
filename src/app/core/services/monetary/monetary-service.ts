@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { IMonetaryApiResponse, IMonetaryVariable, IMonetaryMethodology, IMonetaryHistoryResult } from '../../../models/interfaces/imonetary';
+import { IMonetaryVariable, IMonetaryMethodology, IMonetaryHistoryResult } from '../../../models/interfaces/imonetary';
 
 @Injectable({
   providedIn: 'root'
@@ -16,16 +16,16 @@ export class MonetaryService {
    * Get the list of monetary variables.
    * @returns An observable of the API response containing an array of monetary variables.
    */
-  getVariables(): Observable<IMonetaryApiResponse<IMonetaryVariable[]>> {
-    return this.http.get<IMonetaryApiResponse<IMonetaryVariable[]>>(`${this.apiUrl}/variables`);
+  getVariables(): Observable<IMonetaryVariable[]> {
+    return this.http.get<IMonetaryVariable[]>(`${this.apiUrl}/variables`);
   }
 
   /**
    * Get the list of methodologies.
    * @returns An observable of the API response containing an array of methodologies.
    */
-  getMethodologies(): Observable<IMonetaryApiResponse<IMonetaryMethodology[]>> {
-    return this.http.get<IMonetaryApiResponse<IMonetaryMethodology[]>>(`${this.apiUrl}/methodologies`);
+  getMethodologies(): Observable<IMonetaryMethodology[]> {
+    return this.http.get<IMonetaryMethodology[]>(`${this.apiUrl}/methodologies`);
   }
 
   /**
@@ -35,11 +35,11 @@ export class MonetaryService {
    * @param hasta The end date for the historical data (optional, format: YYYY-MM-DD).
    * @returns An observable of the API response containing the historical data for the specified variable.
    */
-  getVariableHistory(id: number, desde?: string, hasta?: string): Observable<IMonetaryApiResponse<IMonetaryHistoryResult[]>> {
+  getVariableHistory(id: number, desde?: string, hasta?: string): Observable<IMonetaryHistoryResult[]> {
     let params = new HttpParams();
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
 
-    return this.http.get<IMonetaryApiResponse<IMonetaryHistoryResult[]>>(`${this.apiUrl}/variables/${id}`, { params });
+    return this.http.get<IMonetaryHistoryResult[]>(`${this.apiUrl}/variables/${id}`, { params });
   }
 }

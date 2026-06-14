@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreditReportService } from '../../core/services/credit-report/credit-report-service';
 import { Spinner } from "../../shared/components/spinner/spinner";
@@ -17,6 +18,7 @@ import { IHistoricalItem } from '../../models/interfaces/ihistorical-item';
 import { IBatchItem } from '../../models/interfaces/ibatch-item';
 
 import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-formatters.util';
+import { IBatchResult } from '../../models/interfaces/ibatch-result';
 
 @Component({
   selector: 'app-credit-report',
@@ -27,47 +29,50 @@ import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-
 })
 export class CreditReport {
 
-  cuit: string = '';
-  loading: boolean = false;
+  cuit = signal<string>('');
+  loading = signal<boolean>(false);
+  result = signal<ICreditSummary | null>(null);
+  errorMessage = signal<string | null>(null);
+  errorType = signal<'warning' | 'danger' | null>(null);
+  historicalData = signal<IHistoricalItem[]>([]);
+  resultsArray = signal<IBatchItem[]>([]);
+
+  private readonly creditReportService = inject(CreditReportService);
+
+  readonly getSituationClass = getSituationClass;
+  readonly getSituationLabel = getSituationLabel;
+
+  // Computed signals
+  cleanCuits = computed(() => this.cuit().split(/[\s,]+/).filter(c => c.length > 0));
+
+  isValidCuit = computed(() => {
+    const cuits = this.cleanCuits();
+    return cuits.length > 0 && cuits.every(c => /^\d{11}$/.test(c));
+  });
+
+  isBatchMode = computed(() => this.cleanCuits().length > 1);
   
-  result: ICreditSummary | null = null;
-  errorMessage: string | null = null;
-  errorType: 'warning' | 'danger' | null = null;
-  historicalData: IHistoricalItem[] = [];
-
-  isBatchMode: boolean = false;
-  resultsArray: IBatchItem[] = [];
-
-  constructor(private creditReportService: CreditReportService) { }
-
-  getSituationClass = getSituationClass;
-  getSituationLabel = getSituationLabel;
-
   /**
    * Executes a query based on the CUIT entered by the user.
    * @returns void.
    */
   consult(): void {
-    const cuits = this.getCleanCuits();
+    const cuits = this.cleanCuits();
 
     if (cuits.length === 0 || !this.isValidCuit()) {
-      this.errorMessage = 'Formato de CUIT inválido. Use 11 dígitos numéricos.';
-      this.errorType = 'warning';
+      this.setError('Formato de CUIT inválido. Use 11 dígitos numéricos.', 'warning');
       return;
     }
 
     if (cuits.length > 5) {
-      this.errorMessage = 'El límite máximo es de 5 CUITs por consulta.';
-      this.errorType = 'warning';
+      this.setError('El límite máximo es de 5 CUITs por consulta.', 'warning');
       return;
     }
 
-    this.loading = true;
-    this.errorMessage = null;
-    this.errorType = null;
-    this.isBatchMode = cuits.length > 1;
+    this.resetState();
+    this.loading.set(true);
 
-    this.isBatchMode ? this.executeBatchConsult(cuits) : this.executeSingleConsult(cuits[0]);
+    this.isBatchMode() ? this.executeBatchConsult(cuits) : this.executeSingleConsult(cuits[0]);
   }
 
   /**
@@ -76,48 +81,36 @@ export class CreditReport {
    * @returns Promise<void>.
    */
   private async executeSingleConsult(cuit: string): Promise<void> {
-    this.result = null;
-    this.historicalData = [];
-
     try {
-      const [summaryRes, historyRes] = await Promise.all([
+      const [summaryData, historyData] = await Promise.all([
         firstValueFrom(this.creditReportService.getCreditSummary(cuit)),
         firstValueFrom(this.creditReportService.getHistoricalEvolution(cuit))
       ]);
 
-      if (summaryRes.error) {
-        this.errorMessage = summaryRes.message ?? 'Error desconocido';
-        this.errorType = summaryRes.type as 'warning' | 'danger';
-        return; 
-      }
-
-      this.result = summaryRes.data ?? null;
-      let history: IHistoricalItem[] = historyRes.data ?? [];
-
-      if (this.result) {
-        const currentPeriod = this.result.periodo;
-        const alreadyExists = history.some((h: IHistoricalItem) => h.periodo === currentPeriod);
-
-        if (!alreadyExists) {
-          history.push({
-            periodo: currentPeriod,
-            deudaTotal: this.result?.deudaTotal ?? 0,
-            situacion: this.result?.situacion ?? 1,
-            isCurrent: true
-          });
-        }
-        history.sort((a, b) => Number(b.periodo) - Number(a.periodo));
-      }
-
-      this.historicalData = history;
-      this.cuit = '';
-    }
-    catch (error) {
-      this.handleConnectionError();
+      this.result.set(summaryData);
       
+      let history = historyData || [];
+      const alreadyExists = history.some(h => h.periodo === summaryData.periodo);
+      
+      if (!alreadyExists) {
+        history.push({
+          periodo: summaryData.periodo,
+          deudaTotal: summaryData.deudaTotal ?? 0,
+          situacion: summaryData.situacion ?? 1,
+          isCurrent: true
+        });
+      }
+      history.sort((a, b) => Number(b.periodo) - Number(a.periodo));
+      
+      this.historicalData.set(history);
+      this.cuit.set('');
+
+    }
+    catch (error: unknown) {
+      this.handleHttpError(error);
     }
     finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
@@ -127,37 +120,37 @@ export class CreditReport {
    * @returns Promise<void>.
    */
   private async executeBatchConsult(cuits: string[]): Promise<void> {
-    this.resultsArray = [];
-
     try {
-      const responses = await firstValueFrom(this.creditReportService.getBatchCreditSummary(cuits));
-
-      this.resultsArray = responses.map((res, index) => ({
-        cuit: cuits[index],
-        denominacion: res.data?.denominacion,
-        success: !res.error,
-        data: res.data ?? null,
-        errorMessage: res.error ? (res.message || 'Error en la consulta') : null,
-        showDetail: false,
-        loadingHistory: false,
-        historicalData: [],
-        historyError: null
-      }));
-
-      const allFailed = this.resultsArray.length > 0 && this.resultsArray.every(r => !r.success);
-
-      if (allFailed) {
-        this.errorMessage = 'No se pudo obtener información de los CUITs solicitados. La conexión con el API del BCRA fue interrumpida.';
-        this.errorType = 'danger';
-        this.resultsArray = [];
-      }
-    }
-    catch (error) {
-      this.handleConnectionError();
+      const responses: IBatchResult[] = await firstValueFrom(this.creditReportService.getBatchCreditSummary(cuits));
       
+      const batchItems: IBatchItem[] = responses.map((res) => {
+        const isError = 'error' in res;
+        
+        return {
+          cuit: isError ? res.cuit : res.cuit,
+          denominacion: isError ? undefined : res.denominacion,
+          success: !isError,
+          data: isError ? null : res,
+          errorMessage: isError ? res.message : null,
+          showDetail: false,
+          loadingHistory: false,
+          historicalData: [],
+          historyError: null
+        };
+      });
+
+      const allFailed = batchItems.length > 0 && batchItems.every(r => !r.success);
+      if (allFailed) {
+        this.setError('Ninguno de los CUITs ingresados registra información activa.', 'warning');
+      } 
+      
+      this.resultsArray.set(batchItems);
+    }
+    catch (error: unknown) {
+      this.handleHttpError(error);
     }
     finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
@@ -166,100 +159,110 @@ export class CreditReport {
    * @param item The item of the Batch.
    * @returns Promise<void> 
    */
-  async toggleDetail(item: any): Promise<void> {
-    item.showDetail = !item.showDetail;
+  async toggleDetail(itemCuit: string): Promise<void> {
+    const item = this.resultsArray().find(i => i.cuit === itemCuit);
+    if (!item) return;
 
-    if (!item.showDetail || item.historicalData.length > 0 || item.loadingHistory) {
-      return;
-    }
+    this.updateBatchItem(itemCuit, { showDetail: !item.showDetail });
 
-    item.loadingHistory = true;
-    item.historyError = null;
+    if (!item.showDetail || item.historicalData.length > 0 || item.loadingHistory) return;
+
+    this.updateBatchItem(itemCuit, { loadingHistory: true, historyError: null });
 
     try {
-      const response = await firstValueFrom(this.creditReportService.getHistoricalEvolution(item.cuit));
-
-      let history: IHistoricalItem[] = response.data ?? [];
+      const historyData = await firstValueFrom(this.creditReportService.getHistoricalEvolution(itemCuit));
+      let history = historyData || [];
 
       if (item.data) {
-        const currentPeriod = item.data.periodo;
-        const alreadyExists = history.some((h: IHistoricalItem) => h.periodo === currentPeriod);
-
+        const alreadyExists = history.some(h => h.periodo === item.data!.periodo);
         if (!alreadyExists) {
           history.push({
-            periodo: currentPeriod,
-            deudaTotal: item.data.deudaTotal ?? 0,
-            situacion: item.data.situacion ?? 1,
+            periodo: item.data.periodo,
+            deudaTotal: item.data.deudaTotal,
+            situacion: item.data.situacion,
             isCurrent: true
           });
         }
         history.sort((a, b) => Number(b.periodo) - Number(a.periodo));
       }
 
-      item.historicalData = history;
+      this.updateBatchItem(itemCuit, { historicalData: history });
     }
-    catch (error) {
-      console.error(`Error obteniendo historial para ${item.cuit}:`, error);
-
-      item.historicalData = [];
-      item.historyError = 'No se pudo cargar el historial en este momento.';
+    catch {
+      this.updateBatchItem(itemCuit, { 
+        historicalData: [], 
+        historyError: 'No se puede cargar el historial en este momento.' 
+      });
     }
     finally {
-      item.loadingHistory = false;
+      this.updateBatchItem(itemCuit, { loadingHistory: false });
     }
   }
 
   /**
-   * Handler for connections errors with the API.
+   * Reset properties.
    * @returns void.
    */
-  private handleConnectionError(): void {
-    this.errorMessage = 'No se pudo establecer comunicación con la pasarela de servicios.';
-    this.errorType = 'danger';
-    this.loading = false;
-  }
-
-  /**
-   * Get a valid CUIT.
-   * @returns A string with the valid CUIT/CUITs.
-   */
-  private getCleanCuits(): string[] {
-    return this.cuit.split(/[\s,]+/).filter(c => c.length > 0);
-  }
-
-  /**
-   * Check if the entered CUIT is a valid CUIT. 
-   * @returns True or false.
-   */
-  isValidCuit(): boolean {
-    const cuits = this.getCleanCuits();
-    return cuits.length > 0 && cuits.every(c => /^\d{11}$/.test(c));
+  private resetState(): void {
+    this.result.set(null);
+    this.historicalData.set([]);
+    this.resultsArray.set([]);
+    this.errorMessage.set(null);
+    this.errorType.set(null);
   }
 
   /**
    * Event that validates the CUIT entry and limits it to 5 CUITs.
    * @param event The event triggered.
    */
-  onCuitInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    
-    // 1. replace any commas with spaces and leave only numbers and spaces
-    let sanitizedValue = input.value.replace(/,/g, ' ').replace(/[^0-9\s]/g, '');
-    
-    // 2. normalize multiple consecutive spaces to a single space
-    sanitizedValue = sanitizedValue.replace(/\s+/g, ' ');
-
-    // 3. split the string by spaces to analyze the individual CUITs.
+  onCuitChange(value: string): void {
+    let sanitizedValue = value.replace(/,/g, ' ').replace(/[^0-9\s]/g, '').replace(/\s+/g, ' ');
     let cuits = sanitizedValue.split(' ');
 
-    // 4. if the array has more than 5 elements, I trim it.
     if (cuits.length > 5) {
-      cuits = cuits.slice(0, 5);
-      sanitizedValue = cuits.join(' ');
+      sanitizedValue = cuits.slice(0, 5).join(' ');
     }
+    
+    this.cuit.set(sanitizedValue);
+  }
 
-    // 5. update the component variable and force the value into the input
-    this.cuit = sanitizedValue;
-    input.value = this.cuit; 
+  /**
+   * Set the message error.
+   * @param message The message to set.
+   * @param type The type of message.
+   * @returns void.
+   */
+  private setError(message: string, type: 'warning' | 'danger'): void {
+    this.errorMessage.set(message);
+    this.errorType.set(type);
+  }
+
+  /**
+   * Processes HTTP response errors and categorizes them by severity.
+   * Specifically handles 404 (Not Found) as a warning, while other errors default to danger.
+   * @param error The error object captured from the service call.
+   * @returns void.
+   */
+  private handleHttpError(error: unknown): void {
+    if (error instanceof HttpErrorResponse) {
+      const message = error.error?.message || 'Error al obtener los datos del servidor.';
+      const isNotFound = error.status === 404;
+      
+      this.setError(message, isNotFound ? 'warning' : 'danger');
+    }
+    else {
+      this.setError('No se pudo establecer comunicación con la pasarela de servicios.', 'danger');
+    }
+  }
+
+  /**
+   * Updates a specific IBatchItem within the results signal using an immutable merge.
+   * @param cuit The unique identifier (CUIT) of the item to update.
+   * @param changes A partial object containing the properties to be updated.
+   */
+  private updateBatchItem(cuit: string, changes: Partial<IBatchItem>): void {
+    this.resultsArray.update(items => 
+      items.map(item => item.cuit === cuit ? { ...item, ...changes } : item)
+    );
   }
 }

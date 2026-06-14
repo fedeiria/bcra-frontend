@@ -10,5 +10,5 @@ export interface ICheckDetail {
     enRevision: boolean;
     procesoJud: boolean;
     causal: string;
-    codigoEntidad: number;
+    codigoEntidad: number | string;
 }

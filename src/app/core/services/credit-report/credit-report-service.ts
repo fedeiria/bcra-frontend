@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { IApiResponse } from '../../../models/interfaces/iapi-response';
+import { IBatchResult } from '../../../models/interfaces/ibatch-result';
 import { ICreditSummary } from '../../../models/interfaces/icredit-summary';
 import { IHistoricalItem } from '../../../models/interfaces/ihistorical-item';
 
@@ -22,8 +22,8 @@ export class CreditReportService {
    * @param cuit - The CUIT of the entity we want to consult.
    * @returns An observable that emits the API response containing the credit summary.
    */
-  getCreditSummary(cuit: string): Observable<IApiResponse<ICreditSummary>> {
-    return this.http.post<IApiResponse<ICreditSummary>>(`${this.apiUrl}/summary`, { cuit });
+  getCreditSummary(cuit: string): Observable<ICreditSummary> {
+    return this.http.post<ICreditSummary>(`${this.apiUrl}/summary`, { cuit });
   }
 
   /**
@@ -31,8 +31,8 @@ export class CreditReportService {
    * @param cuits An array of CUIT strings to consult.
    * @returns An observable that emits the API response containing an array of credit summaries.
    */
-  getBatchCreditSummary(cuits: string[]): Observable<IApiResponse<ICreditSummary>[]> {
-    return this.http.post<IApiResponse<ICreditSummary>[]>(`${this.apiUrl}/batch-summary`, { cuits });
+  getBatchCreditSummary(cuits: string[]): Observable<IBatchResult[]> {
+    return this.http.post<IBatchResult[]>(`${this.apiUrl}/batch-summary`, { cuits });
   }
   
   /**
@@ -40,7 +40,7 @@ export class CreditReportService {
    * @param cuit - The CUIT of the entity we want to consult.
    * @returns An observable that emits the API response containing an array of historical items.
    */
-  getHistoricalEvolution(cuit: string): Observable<IApiResponse<IHistoricalItem[]>> {
-    return this.http.post<IApiResponse<IHistoricalItem[]>>(`${this.apiUrl}/history`, { cuit });
+  getHistoricalEvolution(cuit: string): Observable<IHistoricalItem[]> {
+    return this.http.post<IHistoricalItem[]>(`${this.apiUrl}/history`, { cuit });
   }
 }
