@@ -3,6 +3,7 @@
 <div class="main-container">
     <div class="container">
 
+        <!-- Search card -->
         <div class="card search-card shadow-sm mb-4">
             <div class="card-body p-4">
                 <h3 class="search-title mb-3">
@@ -14,7 +15,8 @@
 
                 <div class="row align-items-start g-3">
                     <div class="col-md-8 col-lg-6">
-                        <input type="text" class="form-control form-control-custom" inputmode="numeric" placeholder="Ej: 20123456789" maxlength="59"
+                        <input type="text" class="form-control form-control-custom" inputmode="numeric"
+                            placeholder="Ej: 20123456789" maxlength="59"
                             [ngModel]="cuit()"
                             (ngModelChange)="onCuitChange($event)"
                             (keydown.enter)="consult()"
@@ -44,54 +46,88 @@
             </div>
         </div>
 
+        <!-- Global error alert -->
         @if (errorMessage()) {
             <div class="alert d-flex align-items-center gap-3 p-3 mb-4 border-start border-4 shadow-sm"
-                [ngClass]="{'alert-warning border-warning bg-warning-subtle text-warning-emphasis': errorType() === 'warning', 'alert-danger border-danger bg-danger-subtle text-danger-emphasis': errorType() === 'danger'}">
-                <i class="bi" [ngClass]="errorType() === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-cloud-slash-fill'"></i>
+                [ngClass]="{
+                    'alert-warning border-warning bg-warning-subtle text-warning-emphasis': errorType() === 'warning',
+                    'alert-danger border-danger bg-danger-subtle text-danger-emphasis': errorType() === 'danger'
+                }">
+                <i class="bi fs-5"
+                    [ngClass]="errorType() === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-cloud-slash-fill'">
+                </i>
                 <div class="d-flex flex-column">
-                    <strong class="fs-6">{{ errorType() === 'warning' ? 'Aviso de Consulta' : 'Falla del Servidor' }}</strong>
+                    <strong class="fs-6">
+                        {{ errorType() === 'warning' ? 'Aviso de Consulta' : 'Falla del Servidor' }}
+                    </strong>
                     <span class="small">{{ errorMessage() }}</span>
                 </div>
             </div>
         }
 
+        <!-- Loading -->
         @if (loading()) {
             <div class="d-flex justify-content-center my-5">
                 <app-spinner message="Conectando de forma segura con Central de Deudores BCRA..."></app-spinner>
             </div>
         }
 
+        <!-- Empty state -->
         @if (!loading() && !result() && resultsArray().length === 0 && !errorMessage()) {
             <div class="empty-state-box text-center shadow-sm mt-4">
                 <i class="bi bi-person-badge fs-1 text-secondary opacity-50 d-block mb-3"></i>
                 <h5 class="fw-bold text-secondary">Esperando consulta de CUIT</h5>
-                <p class="text-muted mx-auto small" style="max-width: 400px;">Introduzca uno o más CUITs arriba.</p>
+                <p class="text-muted mx-auto small" style="max-width: 400px;">
+                    Introduzca uno o más CUITs arriba.
+                </p>
             </div>
         }
 
+        <!-- Single result -->
         @if (!isBatchMode()) {
             @if (result(); as res) {
                 <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
                     <div class="card-body bg-white p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <div>
-                            <span class="badge bg-secondary-subtle text-secondary fw-semibold mb-1 text-uppercase tracking-wider" style="font-size: 0.75rem;">Razón Social / Denominación</span>
+                            <span class="badge bg-secondary-subtle text-secondary fw-semibold mb-1 text-uppercase tracking-wider"
+                                style="font-size: 0.75rem;">Razón Social / Denominación</span>
                             <h4 class="fw-bold text-dark m-0">{{ res.denominacion }}</h4>
                         </div>
                         <span class="badge bg-dark fs-6 font-monospace px-3 py-2">CUIT: {{ res.cuit }}</span>
                     </div>
                 </div>
 
-                <ng-container *ngTemplateOutlet="detailedInfo; context: { $implicit: res, itemRef: { historicalData: historicalData(), loadingHistory: false } }"></ng-container>
+                <ng-container *ngTemplateOutlet="detailedInfo; context: {
+                    $implicit: res,
+                    itemRef: { historicalData: historicalData(), loadingHistory: false }
+                }"></ng-container>
             }
         }
 
+        <!-- Batch Result -->
         @if (isBatchMode() && resultsArray().length > 0) {
             <div class="card shadow-sm border-0 mt-4 overflow-hidden">
-                <div class="card-header bg-light border-0 py-3">
+                <div class="card-header bg-light border-0 py-3 d-flex align-items-center justify-content-between">
                     <h5 class="mb-0 fw-bold text-secondary">
                         <i class="bi bi-list-check me-2"></i>Resultados de Consulta Masiva
                     </h5>
+                    <!-- Resumen de éxitos/errores -->
+                    <div class="d-flex gap-2">
+                        @if (resultsArray().length > 0) {
+                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ resultsArray().length - getErrorCount() }} exitosos
+                            </span>
+                        }
+                        @if (getErrorCount() > 0) {
+                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">
+                                <i class="bi bi-x-circle me-1"></i>
+                                {{ getErrorCount() }} con error
+                            </span>
+                        }
+                    </div>
                 </div>
+
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -104,9 +140,16 @@
                         </thead>
                         <tbody>
                             @for (item of resultsArray(); track item.cuit) {
-                                <tr>
+                                <tr [class.table-danger]="!item.success" [class.opacity-75]="!item.success">
                                     <td class="ps-4 fw-bold font-monospace">{{ item.cuit }}</td>
-                                    <td>{{ item.data?.denominacion || '-' }}</td>
+                                    <td>
+                                        @if (item.success && item.data) {
+                                            {{ item.data.denominacion }}
+                                        }
+                                        @else {
+                                            <span class="text-muted fst-italic">No disponible</span>
+                                        }
+                                    </td>
                                     <td>
                                         @if (item.success && item.data) {
                                             <span class="badge {{ getSituationClass(item.data.situacion) }}">
@@ -114,20 +157,25 @@
                                             </span>
                                         }
                                         @else {
-                                            <span class="text-danger small">
-                                                <i class="bi bi-exclamation-triangle-fill"></i> {{ item.errorMessage }}
+                                            <span class="d-inline-flex align-items-center gap-1 text-danger small">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                {{ item.errorMessage }}
                                             </span>
                                         }
                                     </td>
                                     <td class="text-center">
-
                                         @if (item.success) {
-                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" (click)="toggleDetail(item.cuit)">
-                                                <i class="bi" [ngClass]="item.showDetail ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                (click)="toggleDetail(item.cuit)">
+                                                <i class="bi"
+                                                    [ngClass]="item.showDetail ? 'bi-chevron-up' : 'bi-chevron-down'">
+                                                </i>
                                                 {{ item.showDetail ? 'Ocultar' : 'Ver detalle' }}
                                             </button>
                                         }
-
+                                        @else {
+                                            <span class="text-muted small">—</span>
+                                        }
                                     </td>
                                 </tr>
 
@@ -135,11 +183,15 @@
                                     <tr class="table-active">
                                         <td colspan="4" class="p-4 border-top-0">
                                             <div class="card card-body bg-white border-0 shadow-sm">
-                                                <ng-container *ngTemplateOutlet="detailedInfo; context: { $implicit: item.data, itemRef: item }"></ng-container>
+                                                <ng-container *ngTemplateOutlet="detailedInfo; context: {
+                                                    $implicit: item.data,
+                                                    itemRef: item
+                                                }"></ng-container>
                                             </div>
                                         </td>
                                     </tr>
                                 }
+
                             }
                         </tbody>
                     </table>
@@ -150,10 +202,11 @@
     </div>
 
     <app-footer></app-footer>
-
 </div>
 
+
 <ng-template #detailedInfo let-summary let-item="itemRef">
+
     <div class="mb-4">
         <app-metric-cards [summary]="summary"></app-metric-cards>
     </div>
@@ -170,7 +223,13 @@
     @else if (item.loadingHistory) {
         <div class="p-5 text-center">
             <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2">Cargando historial...</p>
+            <p class="mt-2 text-muted small">Cargando historial...</p>
+        </div>
+    }
+    @else if (item.historyError) {
+        <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span class="small">{{ item.historyError }}</span>
         </div>
     }
     @else {
@@ -194,4 +253,5 @@
     <div class="mb-4">
         <app-entity-details [details]="summary.entidadesDetalle"></app-entity-details>
     </div>
+
 </ng-template>

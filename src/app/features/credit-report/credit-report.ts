@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreditReportService } from '../../core/services/credit-report/credit-report-service';
@@ -17,8 +17,9 @@ import { ICreditSummary } from '../../models/interfaces/icredit-summary';
 import { IHistoricalItem } from '../../models/interfaces/ihistorical-item';
 import { IBatchItem } from '../../models/interfaces/ibatch-item';
 
+import { IBatchResult, isBatchError } from '../../models/interfaces/ibatch-result';
+
 import { getSituationClass, getSituationLabel } from '../../shared/utils/credit-formatters.util';
-import { IBatchResult } from '../../models/interfaces/ibatch-result';
 
 @Component({
   selector: 'app-credit-report',
@@ -51,10 +52,9 @@ export class CreditReport {
   });
 
   isBatchMode = computed(() => this.cleanCuits().length > 1);
-  
+
   /**
    * Executes a query based on the CUIT entered by the user.
-   * @returns void.
    */
   consult(): void {
     const cuits = this.cleanCuits();
@@ -76,9 +76,7 @@ export class CreditReport {
   }
 
   /**
-   * Performs a simple query of the CUIT entered by the user.
-   * @param cuit The CUIT entered by the user.
-   * @returns Promise<void>.
+   * Performs a single CUIT query combining summary and historical data.
    */
   private async executeSingleConsult(cuit: string): Promise<void> {
     try {
@@ -88,10 +86,10 @@ export class CreditReport {
       ]);
 
       this.result.set(summaryData);
-      
+
       let history = historyData || [];
       const alreadyExists = history.some(h => h.periodo === summaryData.periodo);
-      
+
       if (!alreadyExists) {
         history.push({
           periodo: summaryData.periodo,
@@ -101,10 +99,9 @@ export class CreditReport {
         });
       }
       history.sort((a, b) => Number(b.periodo) - Number(a.periodo));
-      
+
       this.historicalData.set(history);
       this.cuit.set('');
-
     }
     catch (error: unknown) {
       this.handleHttpError(error);
@@ -115,23 +112,33 @@ export class CreditReport {
   }
 
   /**
-   * Execute a batch of CUITs.
-   * @param cuits The batch of CUITs.
-   * @returns Promise<void>.
+   * Executes a batch query for multiple CUITs.
    */
   private async executeBatchConsult(cuits: string[]): Promise<void> {
     try {
-      const responses: IBatchResult[] = await firstValueFrom(this.creditReportService.getBatchCreditSummary(cuits));
-      
+      const responses: IBatchResult[] = await firstValueFrom(
+        this.creditReportService.getBatchCreditSummary(cuits)
+      );
+
       const batchItems: IBatchItem[] = responses.map((res) => {
-        const isError = 'error' in res;
-        
+        if (isBatchError(res)) {
+          return {
+            cuit: res.cuit,
+            success: false,
+            data: null,
+            errorMessage: res.message,
+            showDetail: false,
+            loadingHistory: false,
+            historicalData: [],
+            historyError: null
+          };
+        }
+
         return {
-          cuit: isError ? res.cuit : res.cuit,
-          denominacion: isError ? undefined : res.denominacion,
-          success: !isError,
-          data: isError ? null : res,
-          errorMessage: isError ? res.message : null,
+          cuit: res.cuit,
+          success: true,
+          data: res,
+          errorMessage: null,
           showDetail: false,
           loadingHistory: false,
           historicalData: [],
@@ -139,11 +146,23 @@ export class CreditReport {
         };
       });
 
-      const allFailed = batchItems.length > 0 && batchItems.every(r => !r.success);
+      const allFailed = batchItems.every(item => !item.success);
+
       if (allFailed) {
-        this.setError('Ninguno de los CUITs ingresados registra información activa.', 'warning');
-      } 
-      
+        const hasTransient = responses.some(
+          res => isBatchError(res) && res.isTransient === true
+        );
+
+        this.setError(
+          hasTransient
+            ? 'Se interrumpió la comunicación con el API del BCRA debido al volumen de consultas simultáneas. Por favor, reintente en unos instantes.'
+            : 'Ninguno de los CUITs ingresados registra información activa en el BCRA.',
+          hasTransient ? 'danger' : 'warning'
+        );
+
+        return;
+      }
+
       this.resultsArray.set(batchItems);
     }
     catch (error: unknown) {
@@ -155,26 +174,32 @@ export class CreditReport {
   }
 
   /**
-   * Show or hide the CUIT detail.
-   * @param item The item of the Batch.
-   * @returns Promise<void> 
+   * Toggles the detail row for a CUIT in batch mode.
+   * Loads historical data on first expand, or retries if a previous attempt failed.
    */
   async toggleDetail(itemCuit: string): Promise<void> {
     const item = this.resultsArray().find(i => i.cuit === itemCuit);
     if (!item) return;
-
-    this.updateBatchItem(itemCuit, { showDetail: !item.showDetail });
-
-    if (!item.showDetail || item.historicalData.length > 0 || item.loadingHistory) return;
-
+ 
+    const nowOpen = !item.showDetail;
+    this.updateBatchItem(itemCuit, { showDetail: nowOpen });
+ 
+    // Don't fetch if: closing, already loaded successfully, or already loading
+    if (!nowOpen || item.historicalData.length > 0 || item.loadingHistory) return;
+ 
+    // Clear any previous error (e.g. 429 from a prior attempt) so the user
+    // can retry by closing and reopening the detail row
     this.updateBatchItem(itemCuit, { loadingHistory: true, historyError: null });
-
+ 
     try {
-      const historyData = await firstValueFrom(this.creditReportService.getHistoricalEvolution(itemCuit));
+      const historyData = await firstValueFrom(
+        this.creditReportService.getHistoricalEvolution(itemCuit)
+      );
       let history = historyData || [];
-
+ 
       if (item.data) {
         const alreadyExists = history.some(h => h.periodo === item.data!.periodo);
+        
         if (!alreadyExists) {
           history.push({
             periodo: item.data.periodo,
@@ -185,13 +210,16 @@ export class CreditReport {
         }
         history.sort((a, b) => Number(b.periodo) - Number(a.periodo));
       }
-
+ 
       this.updateBatchItem(itemCuit, { historicalData: history });
     }
-    catch {
-      this.updateBatchItem(itemCuit, { 
-        historicalData: [], 
-        historyError: 'No se puede cargar el historial en este momento.' 
+    catch (err: unknown) {
+      const is429 = err instanceof HttpErrorResponse && err.status === 429;
+      this.updateBatchItem(itemCuit, {
+        historicalData: [],
+        historyError: is429
+          ? 'El BCRA limita las consultas simultáneas. Cerrá y volvé a abrir para reintentar.'
+          : 'No se puede cargar el historial en este momento.'
       });
     }
     finally {
@@ -200,20 +228,7 @@ export class CreditReport {
   }
 
   /**
-   * Reset properties.
-   * @returns void.
-   */
-  private resetState(): void {
-    this.result.set(null);
-    this.historicalData.set([]);
-    this.resultsArray.set([]);
-    this.errorMessage.set(null);
-    this.errorType.set(null);
-  }
-
-  /**
-   * Event that validates the CUIT entry and limits it to 5 CUITs.
-   * @param event The event triggered.
+   * Sanitizes and limits the CUIT input to a maximum of 5 entries.
    */
   onCuitChange(value: string): void {
     let sanitizedValue = value.replace(/,/g, ' ').replace(/[^0-9\s]/g, '').replace(/\s+/g, ' ');
@@ -222,33 +237,56 @@ export class CreditReport {
     if (cuits.length > 5) {
       sanitizedValue = cuits.slice(0, 5).join(' ');
     }
-    
+
     this.cuit.set(sanitizedValue);
   }
 
+  // ---------------------------------------------------------------------------
+  // Template helpers
+  // ---------------------------------------------------------------------------
+
   /**
-   * Set the message error.
-   * @param message The message to set.
-   * @param type The type of message.
-   * @returns void.
+   * Returns the count of failed items in the current batch result.
+   * Used in the template to render the error/success summary badges.
    */
+  getErrorCount(): number {
+    return this.resultsArray().filter(item => !item.success).length;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  private resetState(): void {
+    this.result.set(null);
+    this.historicalData.set([]);
+    this.resultsArray.set([]);
+    this.errorMessage.set(null);
+    this.errorType.set(null);
+  }
+
   private setError(message: string, type: 'warning' | 'danger'): void {
     this.errorMessage.set(message);
     this.errorType.set(type);
   }
 
   /**
-   * Processes HTTP response errors and categorizes them by severity.
-   * Specifically handles 404 (Not Found) as a warning, while other errors default to danger.
-   * @param error The error object captured from the service call.
-   * @returns void.
+   * Handles HTTP-level errors (network failures, gateway errors).
+   * Per-CUIT errors in batch mode never reach here — they arrive as IBatchError inside responses[].
    */
   private handleHttpError(error: unknown): void {
     if (error instanceof HttpErrorResponse) {
-      const message = error.error?.message || 'Error al obtener los datos del servidor.';
-      const isNotFound = error.status === 404;
       
-      this.setError(message, isNotFound ? 'warning' : 'danger');
+      const body = error.error;
+      const message = typeof body === 'object' && body !== null
+        ? body.message || body.errorMessages?.[0] || 'Error al obtener los datos del servidor.'
+        : typeof body === 'string' && body.length > 0
+          ? body
+          : error.message || 'Error al obtener los datos del servidor.';
+
+      const type = (error.status === 404 || body?.type === 'warning') ? 'warning' : 'danger';
+
+      this.setError(message, type);
     }
     else {
       this.setError('No se pudo establecer comunicación con la pasarela de servicios.', 'danger');
@@ -256,12 +294,10 @@ export class CreditReport {
   }
 
   /**
-   * Updates a specific IBatchItem within the results signal using an immutable merge.
-   * @param cuit The unique identifier (CUIT) of the item to update.
-   * @param changes A partial object containing the properties to be updated.
+   * Immutable update of a single IBatchItem within resultsArray.
    */
   private updateBatchItem(cuit: string, changes: Partial<IBatchItem>): void {
-    this.resultsArray.update(items => 
+    this.resultsArray.update(items =>
       items.map(item => item.cuit === cuit ? { ...item, ...changes } : item)
     );
   }
